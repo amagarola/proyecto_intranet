@@ -1,0 +1,104 @@
+# === Terraform ===
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+*.tfplan
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+crash.log
+crash.*.log
+
+# === Helm Charts ===
+*.tgz
+.chart-releases/
+.tmp/
+*.bak
+*.swp
+*.swo
+*.log
+*.tmp
+*.orig
+*~
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+.env
+.venv/
+venv/
+pip-wheel-metadata/
+*.sqlite3
+
+# === Bash ===
+*.swp
+*.swo
+*.bak
+*.tmp
+*.log
+
+# === Go ===
+/bin/
+/pkg/
+/vendor/
+/*.exe
+/*.test
+*.out
+
+# === Docker ===
+*.tar
+*.pid
+*.sock
+.dockerignore
+docker-compose.override.yml
+
+# === Kubernetes ===
+*.kubeconfig
+*.yaml~
+*.yml~
+
+# === CI/CD ===
+*.env
+.env.*
+*.local
+*.secret
+*.token
+*.pem
+*.key
+*.crt
+*.pub
+*.csr
+
+# === IDEs y editores ===
+.vscode/
+.idea/
+*.code-workspace
+
+# === Archivos del sistema ===
+.DS_Store
+Thumbs.db
+*.~*
+*.orig
+*~
+*#
+
+# === Otros ===
+tags
+*.log
+*.bak
+*.tmp
+*.swp
+*.swo
+*.
