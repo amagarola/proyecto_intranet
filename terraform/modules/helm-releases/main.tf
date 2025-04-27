@@ -68,9 +68,13 @@ resource "helm_release" "argocd" {
     value = "NodePort"
   }
   set {
-    # puerto HTTP interno de Argo CD → NodePort 30081
-    name  = "server.service.nodePort"
+    name  = "server.service.nodePortHttp"
     value = "30081"
+  }
+
+  set {
+    name  = "server.service.nodePortHttps"
+    value = "30444" # Opcional para HTTPS
   }
 
 

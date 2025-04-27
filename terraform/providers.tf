@@ -15,5 +15,6 @@ provider "helm" {
     client_key             = base64decode(trimspace(data.external.kubeconfig.result["key"]))
     cluster_ca_certificate = base64decode(trimspace(data.external.kubeconfig.result["ca"]))
     client_certificate     = base64decode(trimspace(data.external.kubeconfig.result["cert"]))
+    #insecure               = true
   }
 }
