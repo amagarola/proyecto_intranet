@@ -20,33 +20,54 @@ resource "local_file" "k3s_private_key" {
 # Configura un grupo de seguridad para las instancias de k3s
 resource "aws_security_group" "k3s_sg" {
   name        = "k3s-sg"
-  description = "Allow k3s traffic"
+  description = "Traffic for k3s cluster (SSH, API, Ingress)"
 
-  # Permitir tráfico SSH en el puerto 22
+  #######################################################
+  # INGRESS
+  #######################################################
+
+  # 1 ─ SSH (gestionar las instancias)
   ingress {
+    description = "SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] # ← cambia a tu IP 1.2.3.4/32 si quieres limitarlo
   }
 
-  # Permitir tráfico en el puerto 6443 (puerto de Kubernetes)
+  # 2 ─ API-server k3s
   ingress {
+    description = "kubernetes API"
     from_port   = 6443
     to_port     = 6443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] # o solo tu oficina/VPN
   }
 
-  # Permitir tráfico HTTP y HTTPS
+  # 3 ─ Ingress-nginx expuesto como NodePort 30080 / 30443
+  #     (si cambiaste los puertos en Helm)
   ingress {
-    from_port   = 80
-    to_port     = 443
+    description = "Ingress HTTP (NodePort 30080)"
+    from_port   = 30080
+    to_port     = 30080
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Permitir todo el tráfico de salida
+  ingress {
+    description = "Ingress HTTPS (NodePort 30443)"
+    from_port   = 30443
+    to_port     = 30443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # ── Si en vez de NodePort usas hostPort 80/443 o MetalLB/LoadBalancer,
+  #    elimina las reglas 3 y 4 y crea las que correspondan (80/443).
+
+  #######################################################
+  # EGRESS  (todo permitido para que los nodos salgan a Internet)
+  #######################################################
   egress {
     from_port   = 0
     to_port     = 0
@@ -54,6 +75,7 @@ resource "aws_security_group" "k3s_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
 
 # Crea la instancia maestra (master) de k3s
 resource "aws_instance" "master" {
@@ -119,8 +141,20 @@ resource "aws_instance" "master" {
       "sudo cp /etc/rancher/k3s/k3s.yaml /home/ubuntu/.kube/config",
       "sudo chown ubuntu:ubuntu /home/ubuntu/.kube/config",
       "echo 'export KUBECONFIG=$HOME/.kube/config' >> /home/ubuntu/.bashrc",
-    ]
 
+
+      # ────────────────────────────────────────────────────────────
+      # A) Ajustar el kubeconfig para que use la IP pública
+      # ────────────────────────────────────────────────────────────
+      "sudo kubectl config set-cluster default --server=https://${self.public_ip}:6443 --kubeconfig=/etc/rancher/k3s/k3s.yaml",
+
+      # B) Copiarlo al home y dar permisos a ubuntu
+      "mkdir -p /home/ubuntu/.kube",
+      "sudo cp /etc/rancher/k3s/k3s.yaml /home/ubuntu/.kube/config",
+      "sudo chown ubuntu:ubuntu /home/ubuntu/.kube/config",
+
+      # (opcional) quitar certificados/client-key si solo quieres usar token
+    ]
     connection {
       type        = "ssh"
       user        = "ubuntu"

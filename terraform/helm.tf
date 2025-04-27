@@ -25,12 +25,15 @@ resource "helm_release" "nginx_ingress" {
 
   set {
     name  = "controller.service.type"
-    value = "LoadBalancer"
+    value = "NodePort"
   }
-
   set {
-    name  = "controller.service.externalTrafficPolicy"
-    value = "Local"
+    name  = "controller.service.nodePorts.http"
+    value = "30080"
+  }
+  set {
+    name  = "controller.service.nodePorts.https"
+    value = "30443"
   }
 }
 
