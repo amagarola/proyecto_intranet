@@ -1,6 +1,5 @@
-
 # resource "kubernetes_manifest" "letsencrypt_issuer" {
-#   depends_on = [aws_instance.master]
+
 #   manifest = {
 #     apiVersion = "cert-manager.io/v1"
 #     kind       = "ClusterIssuer"
@@ -9,7 +8,7 @@
 #     }
 #     spec = {
 #       acme = {
-#         email  = "tucorreo@ejemplo.com"
+#         email  = "adrianmagarola@ejemplo.com"
 #         server = "https://acme-v02.api.letsencrypt.org/directory"
 #         privateKeySecretRef = {
 #           name = "letsencrypt-prod"

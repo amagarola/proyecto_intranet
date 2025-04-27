@@ -21,7 +21,11 @@ resource "aws_instance" "master" {
   instance_type          = var.instance_type
   key_name               = aws_key_pair.k3s.key_name
   vpc_security_group_ids = [var.security_group_id]
-  tags                   = { Name = "node-master" }
+  tags = {
+    Name                             = "k3s-master"
+    "kubernetes.io/cluster/k3s"      = "owned"
+    "node-role.kubernetes.io/master" = "true"
+  }
 
   provisioner "remote-exec" {
     inline = [
@@ -41,18 +45,24 @@ resource "aws_instance" "master" {
       # 3) **Limpiar instalación anterior de k3s y sus certificados**
       # ------------------------------------------------------------------
       "sudo systemctl stop k3s || true",
-      "sudo k3s-uninstall.sh   || true",
+      "sudo /usr/local/bin/k3s-uninstall.sh || true",
       "sudo rm -rf /var/lib/rancher/k3s /etc/rancher/k3s",
 
       # ------------------------------------------------------------------
       # 4) Crear config.yaml con la SAN = IP pública
       # ------------------------------------------------------------------
-      "sudo tee /etc/rancher/k3s/config.yaml >/dev/null <<EOF\nwrite-kubeconfig-mode: \"644\"\ntls-san:\n  - ${self.public_ip}\n  - 127.0.0.1\nEOF",
+      "sudo mkdir -p /etc/rancher/k3s/",
+      "echo \"write-kubeconfig-mode: \\\"0644\\\"\" | sudo tee /etc/rancher/k3s/config.yaml",
+      "echo \"tls-san:\" | sudo tee -a /etc/rancher/k3s/config.yaml",
+      "echo \"  - ${self.public_ip}\" | sudo tee -a /etc/rancher/k3s/config.yaml",
+      "echo \"node-label:\" | sudo tee -a /etc/rancher/k3s/config.yaml",
+      "echo \"  - \\\"node-role.k3s.io/master=true\\\"\" | sudo tee -a /etc/rancher/k3s/config.yaml",
+      # "echo \"disable-cloud-controller: true\" | sudo tee -a /etc/rancher/k3s/config.yaml",
 
       # ------------------------------------------------------------------
       # 5) Instalar k3s **con la SAN** explícita
       # ------------------------------------------------------------------
-      "curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC='server --tls-san ${self.public_ip} --disable=traefik' sh -",
+      "curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC='server --tls-san ${self.public_ip}' sh -",
 
       # ------------------------------------------------------------------
       # 6) Esperar a que el API-server esté listo
@@ -62,8 +72,8 @@ resource "aws_instance" "master" {
 
 
 
-      "kubectl delete helmchart traefik -n kube-system || true",
-      "kubectl delete svc,deploy -l app.kubernetes.io/name=traefik -n kube-system || true",
+      # "kubectl delete helmchart traefik -n kube-system || true",
+      # "kubectl delete svc,deploy -l app.kubernetes.io/name=traefik -n kube-system || true",
 
 
       "curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash",
