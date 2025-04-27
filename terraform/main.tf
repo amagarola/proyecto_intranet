@@ -80,7 +80,7 @@ resource "aws_security_group" "k3s_sg" {
 # Crea la instancia maestra (master) de k3s
 resource "aws_instance" "master" {
   ami             = "ami-084568db4383264d4" # Imagen de Ubuntu para la instancia master
-  instance_type   = "t3.small"
+  instance_type   = var.instance_type
   key_name        = aws_key_pair.k3s.key_name
   security_groups = [aws_security_group.k3s_sg.name]
   tags            = { Name = "node-master" }
@@ -172,7 +172,7 @@ resource "aws_instance" "workers" {
   depends_on      = [aws_instance.master]
   count           = var.worker_count        # Número de instancias worker
   ami             = "ami-084568db4383264d4" # Imagen de Ubuntu para los workers
-  instance_type   = "t3.small"
+  instance_type   = var.instance_type
   key_name        = aws_key_pair.k3s.key_name
   security_groups = [aws_security_group.k3s_sg.name]
   tags            = { Name = "node-worker-${count.index}" }

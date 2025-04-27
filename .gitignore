@@ -105,3 +105,4 @@ tags
 *pass*
 *k3s-key.pem
 *k3s-ec2.yaml
+*kubeconfig*
