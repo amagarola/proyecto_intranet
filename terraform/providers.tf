@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 provider "kubernetes" {
-  host                   = "https://${aws_instance.master.public_ip}:6443"
+  host                   = "https://${module.k3s_cluster.master_public_ip}:6443"
   client_key             = base64decode(trimspace(data.external.kubeconfig.result["key"]))
   cluster_ca_certificate = base64decode(trimspace(data.external.kubeconfig.result["ca"]))
   client_certificate     = base64decode(trimspace(data.external.kubeconfig.result["cert"]))
@@ -11,7 +11,7 @@ provider "kubernetes" {
 
 provider "helm" {
   kubernetes {
-    host                   = "https://${aws_instance.master.public_ip}:6443"
+    host                   = "https://${module.k3s_cluster.master_public_ip}:6443"
     client_key             = base64decode(trimspace(data.external.kubeconfig.result["key"]))
     cluster_ca_certificate = base64decode(trimspace(data.external.kubeconfig.result["ca"]))
     client_certificate     = base64decode(trimspace(data.external.kubeconfig.result["cert"]))

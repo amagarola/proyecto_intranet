@@ -1,6 +1,4 @@
 resource "null_resource" "update_helm_cache" {
-  depends_on = [aws_instance.master]
-
   provisioner "local-exec" {
     command     = <<-EOT
       mkdir -p "$HOME/.helm/repository"
