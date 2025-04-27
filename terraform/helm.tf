@@ -6,6 +6,7 @@ resource "null_resource" "update_helm_cache" {
       mkdir -p "$HOME/.helm/repository"
       helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
       helm repo add jetstack https://charts.jetstack.io
+      helm repo add argo          https://argoproj.github.io/argo-helm
       helm repo update
     EOT
     interpreter = ["powershell", "-Command"]
@@ -25,15 +26,7 @@ resource "helm_release" "nginx_ingress" {
 
   set {
     name  = "controller.service.type"
-    value = "NodePort"
-  }
-  set {
-    name  = "controller.service.nodePorts.http"
-    value = "30080"
-  }
-  set {
-    name  = "controller.service.nodePorts.https"
-    value = "30443"
+    value = "ClusterIP"
   }
 }
 
@@ -57,6 +50,36 @@ resource "helm_release" "cert_manager" {
   # -- Desactivar el Job startupapicheck
   set {
     name  = "startupapicheck.enabled"
+    value = "false"
+  }
+}
+###############################################################################
+# Argo CD chart (argo/argo-cd) en namespace "argocd"
+###############################################################################
+resource "helm_release" "argocd" {
+  name             = "argocd"
+  chart            = "argo-cd"
+  repository       = "https://argoproj.github.io/argo-helm"
+  version          = "5.55.0"
+  namespace        = "argocd"
+  create_namespace = true
+
+  # Exponemos el server de Argo CD por NodePort
+  set {
+    name  = "server.service.type"
+    value = "NodePort"
+  }
+  set {
+    # puerto HTTP interno de Argo CD → NodePort 30081
+    name  = "server.service.nodePort"
+    value = "30081"
+  }
+
+
+
+  # Exponemos el server de Argo CD por HTTPS
+  set {
+    name  = "server.ingress.enabled"
     value = "false"
   }
 }

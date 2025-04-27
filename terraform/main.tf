@@ -17,7 +17,7 @@ resource "local_file" "k3s_private_key" {
   file_permission = "0400" # Permiso para que SSH lo acepte
 }
 
-# Configura un grupo de seguridad para las instancias de k3s
+# Configura grupo de seguridad para las instancias de k3s
 resource "aws_security_group" "k3s_sg" {
   name        = "k3s-sg"
   description = "Traffic for k3s cluster (SSH, API, Ingress)"
@@ -32,7 +32,7 @@ resource "aws_security_group" "k3s_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # ← cambia a tu IP 1.2.3.4/32 si quieres limitarlo
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   # 2 ─ API-server k3s
@@ -41,11 +41,11 @@ resource "aws_security_group" "k3s_sg" {
     from_port   = 6443
     to_port     = 6443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # o solo tu oficina/VPN
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   # 3 ─ Ingress-nginx expuesto como NodePort 30080 / 30443
-  #     (si cambiaste los puertos en Helm)
+
   ingress {
     description = "Ingress HTTP (NodePort 30080)"
     from_port   = 30080
@@ -62,8 +62,14 @@ resource "aws_security_group" "k3s_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # ── Si en vez de NodePort usas hostPort 80/443 o MetalLB/LoadBalancer,
-  #    elimina las reglas 3 y 4 y crea las que correspondan (80/443).
+  ingress {
+    description = "ArgoCD HTTP"
+    from_port   = 30081
+    to_port     = 30081
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
 
   #######################################################
   # EGRESS  (todo permitido para que los nodos salgan a Internet)
@@ -79,7 +85,7 @@ resource "aws_security_group" "k3s_sg" {
 
 # Crea la instancia maestra (master) de k3s
 resource "aws_instance" "master" {
-  ami             = "ami-084568db4383264d4" # Imagen de Ubuntu para la instancia master
+  ami             = "ami-084568db4383264d4"
   instance_type   = var.instance_type
   key_name        = aws_key_pair.k3s.key_name
   security_groups = [aws_security_group.k3s_sg.name]
@@ -153,7 +159,7 @@ resource "aws_instance" "master" {
       "sudo cp /etc/rancher/k3s/k3s.yaml /home/ubuntu/.kube/config",
       "sudo chown ubuntu:ubuntu /home/ubuntu/.kube/config",
 
-      # (opcional) quitar certificados/client-key si solo quieres usar token
+
     ]
     connection {
       type        = "ssh"
@@ -170,8 +176,8 @@ resource "aws_instance" "master" {
 # Crea las instancias worker de k3s
 resource "aws_instance" "workers" {
   depends_on      = [aws_instance.master]
-  count           = var.worker_count        # Número de instancias worker
-  ami             = "ami-084568db4383264d4" # Imagen de Ubuntu para los workers
+  count           = var.worker_count # Número de instancias worker
+  ami             = "ami-084568db4383264d4"
   instance_type   = var.instance_type
   key_name        = aws_key_pair.k3s.key_name
   security_groups = [aws_security_group.k3s_sg.name]
