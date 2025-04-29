@@ -1,0 +1,42 @@
+wordpress:
+  image:
+    repository: bitnami/wordpress
+    tag: latest
+  username: admin
+  password: adminpassword
+  email: admin@example.com
+  blogName: "Mi WordPress Helm"
+  plugins:
+    - akismet
+    - all-in-one-intranet
+    - buddypress
+    - login-with-github
+    - time-clock
+    - wp-document-revisions
+    - wp-force-login
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: "nginx"
+  hostname: wordpress.example.com
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  tls: true
+
+mariadb:
+  enabled: true
+  auth:
+    rootPassword: rootpassword
+    database: bitnami_wordpress
+    username: bn_wordpress
+    password: wordpresspass
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: hostpath
