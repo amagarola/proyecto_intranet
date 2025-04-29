@@ -46,7 +46,7 @@ resource "helm_release" "cert_manager" {
           name: letsencrypt
         spec:
           acme:
-            email: adrianmagarola@gmail.co
+            email: adrianmagarola@gmail.com
             server: https://acme-v02.api.letsencrypt.org/directory
             privateKeySecretRef:
               name: letsencrypt
