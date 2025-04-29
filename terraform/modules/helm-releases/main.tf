@@ -43,13 +43,13 @@ resource "helm_release" "cert_manager" {
         apiVersion: cert-manager.io/v1
         kind: ClusterIssuer
         metadata:
-          name: letsencrypt-prod
+          name: letsencrypt
         spec:
           acme:
             email: adrianmagarola@gmail.co
             server: https://acme-v02.api.letsencrypt.org/directory
             privateKeySecretRef:
-              name: letsencrypt-prod
+              name: letsencrypt
             solvers:
             - http01:
                 ingress:
@@ -97,7 +97,7 @@ resource "helm_release" "argocd" {
   # TLS usando cert-manager ClusterIssuer
   set {
     name  = "server.ingress.annotations.cert-manager\\.io/cluster-issuer"
-    value = "letsencrypt-prod"
+    value = "letsencrypt"
   }
   set {
     name  = "server.ingress.tls[0].hosts[0]"
