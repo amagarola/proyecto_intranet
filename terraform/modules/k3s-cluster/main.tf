@@ -62,7 +62,7 @@ resource "aws_instance" "master" {
       # ------------------------------------------------------------------
       # 5) Instalar k3s **con la SAN** explícita
       # ------------------------------------------------------------------
-      "curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC='server --tls-san ${self.public_ip}' sh -",
+      "curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC='server --disable traefik --tls-san ${self.public_ip}' sh -",
 
       # ------------------------------------------------------------------
       # 6) Esperar a que el API-server esté listo
@@ -72,8 +72,8 @@ resource "aws_instance" "master" {
 
 
 
-      # "kubectl delete helmchart traefik -n kube-system || true",
-      # "kubectl delete svc,deploy -l app.kubernetes.io/name=traefik -n kube-system || true",
+      "kubectl delete helmchart traefik -n kube-system || true",
+      "kubectl delete svc,deploy -l app.kubernetes.io/name=traefik -n kube-system || true",
 
 
       "curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash",

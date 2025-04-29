@@ -26,58 +26,77 @@ Este proyecto aborda la implementación de una infraestructura en la nube median
                               +----------+        +-----------+
 ```
 
-## 1. Introducción
+## Instrucciones de despliegue
 
-### 1.1. Descripción del proyecto
-El proyecto consiste en la implementación de una intranet alojada en la nube utilizando Kubernetes en instancias EC2 de AWS. En lugar de desarrollar la intranet desde cero, se utilizará un CMS basado en WordPress para facilitar la gestión de contenidos. La autenticación de usuarios se realizará mediante la API de GitHub, y se integrará ArgoCD para la automatización del despliegue continuo. Toda la infraestructura se definirá mediante Terraform y su código se alojará en GitHub para una gestión eficiente y automatizada.
+### 1. Inicialización de Terraform
 
-### 1.2. Objetivos del proyecto
-- Aprender y aplicar Kubernetes en un entorno cloud.
-- Desplegar una intranet funcional utilizando WordPress.
-- Implementar CI/CD con ArgoCD para la gestión automatizada de despliegues.
-- Integrar una autenticación segura con OAuth de GitHub.
-- Automatizar la infraestructura con Terraform y alojarla en GitHub.
-- Optimizar el costo de infraestructura utilizando soluciones económicas y eficientes.
+```bash
+terraform init
+```
 
-## 2. Análisis del contexto y justificación de la propuesta
-Kubernetes no es la opción más ligera para una intranet, pero se elige por dos razones principales:
-- Aprendizaje y experimentación: Se busca adquirir habilidades en Kubernetes, una tecnología clave en DevOps y Cloud Computing.
-- Migración futura: Se plantea como base para la migración de aplicaciones de una empresa que actualmente opera en servidores físicos.
-- Infraestructura como código: Se usará Terraform para definir y gestionar toda la infraestructura en AWS, asegurando despliegues reproducibles y escalables.
+Inicializa el backend y descarga los proveedores necesarios.
 
-## 3. Estado del arte
+### 2. Aplicación del plan de Terraform
 
-### Tecnologías existentes y referencias
-Para la implementación de una intranet, existen diversas soluciones en el mercado:
-- SharePoint: Plataforma de Microsoft para la creación de intranets empresariales, con integración en el ecosistema de Office 365.
-- Google Workspace: Solución basada en la nube que permite la creación de espacios colaborativos con Google Sites.
-- CMS populares (WordPress, Joomla, Drupal): Sistemas de gestión de contenidos utilizados para construir portales web, blogs e intranets.
-- Soluciones Serverless (AWS Lambda, DynamoDB, Amplify): Alternativas modernas para desplegar aplicaciones sin necesidad de gestionar servidores.
-- Infraestructura como código (IaC) con Terraform: Permite definir y desplegar infraestructura en la nube de manera declarativa y automatizada.
+```bash
+terraform apply
+```
 
-En este proyecto, se elige WordPress debido a su facilidad de uso, amplia documentación y la posibilidad de integrarse con Kubernetes mediante contenedores. Además, Terraform se utilizará para la gestión automatizada de la infraestructura en AWS.
+Despliega toda la infraestructura en AWS: instancias EC2, configuraciones de red, roles IAM, bucket S3 para estado remoto.
 
-## 4. Requisitos del proyecto
+### 3. Configuración del contexto Kubernetes
 
-### 4.1.1. Requisitos funcionales
-- Implementación de una intranet con WordPress.
-- Autenticación con GitHub OAuth.
-- Panel de usuario autenticado.
-- Gestión de contenidos y usuarios.
-- Infraestructura desplegada con Terraform y almacenada en GitHub.
+```bash
+ssh -o StrictHostKeyChecking=no -i ../k3s-key.pem ubuntu@<IP-del-nodo-master> \
+  "sudo cat /etc/rancher/k3s/k3s.yaml" > kubeconfig
 
-### 4.1.2. Requisitos no funcionales
-- Disponibilidad en la nube.
-- Despliegue automático con CI/CD.
-- Escalabilidad del sistema con Kubernetes.
-- Definición de infraestructura como código (IaC) con Terraform.
+export KUBECONFIG=./kubeconfig
 
-## 5. Planificación
+```
 
-### 5.1. Fases del proyecto
-1. Análisis y diseño-
-- AWS EC2 para Kubernetes
-- DockerHub para almacenamiento de imágenes
-- GitHub para repositorios y control de versiones
-- Terraform para la gestión de infraestructura
-- Herramientas de monitoreo como Prometheus y Grafana
+Verifica acceso:
+
+```bash
+kubectl get nodes
+kubectl get pods --all-namespaces
+```
+
+### 4. Instalación de ArgoCD
+
+```bash
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
+
+Accede al portal de ArgoCD:
+
+```bash
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+```
+
+Credenciales iniciales:
+
+```bash
+kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.password}" | base64 -d
+```
+
+### 5. Despliegue de la Intranet WordPress
+
+Configura un repositorio Git con los manifiestos Kubernetes de WordPress.
+Regístralo en ArgoCD para desplegarlo automáticamente mediante GitOps.
+
+### 6. Monitorización
+
+Instalación de Prometheus y Grafana:
+
+```bash
+kubectl apply -f prometheus.yaml
+kubectl apply -f grafana.yaml
+```
+
+Acceso a dashboards vía port-forward o mediante Ingress.
+
+## Próximos pasos
+- Implementar escalado automático (Horizontal Pod Autoscaler).
+- Automatizar despliegues de infraestructura con GitHub Actions.
+- Mejorar la seguridad: políticas RBAC, HTTPS, control de acceso IAM.
