@@ -16,7 +16,7 @@ variable "ami_id" {
 variable "instance_type" {
   description = "Tipo de instancia para el proxy"
   type        = string
-  default     = "t3.small"
+  default     = "t3.micro"
 }
 
 # variable "key_name" {
