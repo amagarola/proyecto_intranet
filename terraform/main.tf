@@ -14,7 +14,7 @@ module "helm_releases" {
 
 module "proxy" {
   source               = "./modules/proxy"
-  depends_on           = [null_resource.extract_tls_cert]
+  depends_on           = [module.helm_releases.argocd]
   ami_id               = "ami-0e449927258d45bc4"
   instance_type        = var.instance_type
   subnet_id            = var.subnet_id
@@ -27,36 +27,49 @@ module "proxy" {
 }
 
 resource "null_resource" "extract_tls_cert" {
-  depends_on = [module.helm_releases]
-
   provisioner "local-exec" {
     command = <<EOT
-  ssh -i modules/k3s-cluster/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@${module.k3s_cluster.master_public_ip} <<EOF
+ssh -i modules/k3s-cluster/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@${module.k3s_cluster.master_public_ip} <<'EOF'
   set -euxo pipefail
-  apt-get install -y jq
 
-  # Buscar el nombre real del Secret TLS que empiece por "argocd-tls"
-  SECRET_NAME=$(kubectl get secret -n argocd -o json | jq -r '.items[] | select(.metadata.name | startswith("argocd-tls")) | .metadata.name' | head -n1)
+  sudo apt-get install -y jq
 
-  if [ -z "$SECRET_NAME" ]; then
-    echo "❌ No se encontró ningún Secret TLS que empiece con 'argocd-tls' en el namespace 'argocd'"
-    exit 1
-  fi
+  export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+  echo "🔍 Esperando certificado TLS válido para ArgoCD..."
 
-  echo "✅ Usando secret: $SECRET_NAME"
+  START=$(date +%s)
+  while true; do
+    SECRET_NAME=$(kubectl get secret -n argocd -o json | jq -r '.items[] | select(.metadata.name | startswith("argocd-tls")) | .metadata.name' | head -n1 || true)
+    if [ -n "$SECRET_NAME" ]; then
+      STATUS=$(kubectl get certificate argocd-tls -n argocd -o json | jq -r '.status.conditions[]? | select(.type=="Ready") | .status' || true)
+      if [ "$STATUS" = "True" ]; then
+        echo "✅ Certificado $SECRET_NAME está listo."
+        break
+      fi
+      echo "⏳ Certificado encontrado pero aún no está listo. Esperando..."
+    else
+      echo "🔍 Buscando secret TLS que comience con 'argocd-tls'..."
+    fi
 
-  # Extraer los certificados
+    NOW=$(date +%s)
+    ELAPSED=$((NOW - START))
+    if [ "$ELAPSED" -ge 300 ]; then
+      echo "❌ Timeout de 5 minutos esperando que el certificado esté listo"
+      exit 1
+    fi
+    sleep 10
+  done
+
+  # Exportar certificados
   kubectl get secret "$SECRET_NAME" -n argocd -o jsonpath='{.data.tls\.crt}' | base64 -d > /tmp/argocd.crt
   kubectl get secret "$SECRET_NAME" -n argocd -o jsonpath='{.data.tls\.key}' | base64 -d > /tmp/argocd.key
-
-  chmod 600 /tmp/argocd.*
-
-
   chmod 600 /tmp/argocd.*
 EOF
 EOT
   }
+  depends_on = [module.helm_releases.argocd]
 }
+
 
 resource "aws_iam_role" "ec2_ssm_role" {
   name = "ec2-ssm-role"

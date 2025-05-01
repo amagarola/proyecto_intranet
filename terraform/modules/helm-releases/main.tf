@@ -107,10 +107,10 @@ resource "helm_release" "argocd" {
     name  = "server.ingress.tls[0].secretName"
     value = "argocd-tls"
   }
-  # set {
-  #   name  = "server.extraArgs"
-  #   value = "{--insecure}"
-  # }
+  set {
+    name  = "server.extraArgs"
+    value = "{--insecure}"
+  }
 }
 ###############################################################################
 # Letsencrypt issuer
