@@ -57,7 +57,10 @@ variable "domains" {
 variable "aws_key_name" {
   default = "ec2-proxy-key"
 }
-
+variable "k3s_private_key_pem" {
+  type        = string
+  description = "K3s master private key for SSH access"
+}
 variable "private_key_path" {
   description = "Ruta al archivo de clave privada para conexiones SSH"
   type        = string
