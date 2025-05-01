@@ -17,7 +17,7 @@ variable "private_key_path" {
 variable "instance_type" {
   description = "Tipo de instancia EC2 para los nodos"
   type        = string
-  default     = "t3.micro"
+  default     = "t3.small"
 }
 
 variable "ami_id" {
