@@ -16,7 +16,7 @@ variable "ami_id" {
 variable "instance_type" {
   description = "Tipo de instancia para el proxy"
   type        = string
-  default     = "t3.micro"
+  default     = "t2.micro"
 }
 
 # variable "key_name" {
@@ -40,4 +40,8 @@ variable "zone_id" {
   description = "ID de la zona de Route 53 donde se gestionan los dominios"
   type        = string
   default     = "Z00983232VK8B1OALGWO1"
+}
+variable "k3s_master_ip" {
+  type    = string
+  default = ""
 }

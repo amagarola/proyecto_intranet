@@ -66,3 +66,7 @@ variable "private_key_path" {
   type        = string
   default     = "ec2-proxy-key.pem"
 }
+variable "iam_instance_profile" {
+  type        = string
+  description = "IAM instance profile name for EC2 (for SSM access)"
+}

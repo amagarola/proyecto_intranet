@@ -6,7 +6,7 @@ resource "null_resource" "update_helm_cache" {
       helm repo add argo          https://argoproj.github.io/argo-helm
       helm repo update
     EOT
-    interpreter = ["powershell", "-Command"]
+    interpreter = ["/bin/bash", "-c"]
   }
 }
 
@@ -107,10 +107,10 @@ resource "helm_release" "argocd" {
     name  = "server.ingress.tls[0].secretName"
     value = "argocd-tls"
   }
-  set {
-    name  = "server.extraArgs"
-    value = "{--insecure}"
-  }
+  # set {
+  #   name  = "server.extraArgs"
+  #   value = "{--insecure}"
+  # }
 }
 ###############################################################################
 # Letsencrypt issuer

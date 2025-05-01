@@ -21,6 +21,7 @@ resource "aws_instance" "master" {
   instance_type          = var.instance_type
   key_name               = aws_key_pair.k3s.key_name
   vpc_security_group_ids = [var.security_group_id]
+  iam_instance_profile   = var.iam_instance_profile
   tags = {
     Name                             = "k3s-master"
     "kubernetes.io/cluster/k3s"      = "owned"
@@ -100,6 +101,7 @@ resource "aws_instance" "master" {
       "mkdir -p /home/ubuntu/.kube",
       "sudo cp /etc/rancher/k3s/k3s.yaml /home/ubuntu/.kube/config",
       "sudo chown ubuntu:ubuntu /home/ubuntu/.kube/config",
+      "alias k='kubectl'",
 
 
     ]
@@ -123,6 +125,7 @@ resource "aws_instance" "workers" {
   instance_type          = var.instance_type
   key_name               = aws_key_pair.k3s.key_name
   vpc_security_group_ids = [var.security_group_id]
+  iam_instance_profile   = var.iam_instance_profile
   tags                   = { Name = "node-worker-${count.index}" }
 
   # Transfiere la clave privada al worker
@@ -160,3 +163,4 @@ resource "aws_instance" "workers" {
   }
 }
 # ────────────────────────────────────────────────────────────
+

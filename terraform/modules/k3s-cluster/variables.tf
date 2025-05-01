@@ -31,3 +31,7 @@ variable "security_group_id" {
   type        = string
   default     = ""
 }
+variable "iam_instance_profile" {
+  type        = string
+  description = "IAM instance profile name for EC2 (for SSM access)"
+}
