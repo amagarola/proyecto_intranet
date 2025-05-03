@@ -1,6 +1,6 @@
-# Kubernetización de Intranet Empresarial
+# Infraestructura Cloud y GitOps para Servicios Empresariales
 
-Este proyecto implementa una intranet empresarial basada en WordPress utilizando AWS y Kubernetes. Se emplean herramientas como Terraform para la infraestructura como código (IaC) y ArgoCD para la integración y entrega continua (GitOps).
+Este proyecto aborda un escenario real: la migración de las aplicaciones de una compañía a la nube (AWS) y su orquestación mediante Kubernetes. Se emplean herramientas como Terraform para la infraestructura como código (IaC) y ArgoCD para la integración y entrega continua (GitOps), simulando un entorno de producción moderno.
 
 ## Estructura del Proyecto
 
