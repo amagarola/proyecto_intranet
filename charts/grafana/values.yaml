@@ -1,0 +1,11 @@
+replicaCount: 1
+image:
+  repository: grafana/grafana
+  tag: 8.0.0
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  port: 3000
+resources: {}
+ingress:
+  enabled: false
