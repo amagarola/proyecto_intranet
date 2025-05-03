@@ -2,6 +2,8 @@
 
 Este proyecto aborda un escenario real: la migración de las aplicaciones de una compañía a la nube (AWS) y su orquestación mediante Kubernetes. Se emplean herramientas como Terraform para la infraestructura como código (IaC) y ArgoCD para la integración y entrega continua (GitOps), simulando un entorno de producción moderno.
 
+En contraste, mantener servicios en servidores físicos sin herramientas de orquestación presenta desafíos significativos. La gestión manual de la infraestructura es propensa a errores, dificulta la escalabilidad y la alta disponibilidad, y ralentiza los ciclos de despliegue. La falta de automatización incrementa los costes operativos y reduce la capacidad de respuesta ante cambios o fallos. Este proyecto demuestra cómo la adopción de la nube y prácticas modernas como IaC y GitOps superan estas limitaciones.
+
 ## Estructura del Proyecto
 
 El proyecto está organizado en los siguientes componentes principales:
