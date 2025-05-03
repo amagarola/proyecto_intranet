@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Application
+metadata:
+  name: app-wikijs
+  labels:
+    app: wikijs
+spec:
+  selector:
+    matchLabels:
+      app: wikijs
+  description: Wiki.js application configuration
