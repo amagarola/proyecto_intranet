@@ -29,7 +29,23 @@ module "proxy" {
 resource "null_resource" "extract_tls_cert" {
   provisioner "local-exec" {
     command = <<EOT
-ssh -i modules/k3s-cluster/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@${module.k3s_cluster.master_public_ip} <<'EOF'
+    cat << 'EOF' > ./my_ssh_config
+Host k3s
+  HostName ${module.k3s_cluster.master_public_ip}
+  User ubuntu
+  IdentityFile /modules/k3s-cluster/k3s-key.pem
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null
+
+Host proxy
+  HostName ${module.proxy.public_ip}
+  User ubuntu
+  IdentityFile /modules/proxy/ec2-proxy-key.pem
+  ProxyJump k3s
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null
+EOF
+  ssh -i modules/k3s-cluster/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@${module.k3s_cluster.master_public_ip} <<'EOF'
   set -euxo pipefail
 
   sudo apt-get install -y jq
@@ -53,11 +69,11 @@ ssh -i modules/k3s-cluster/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@${modu
 
     NOW=$(date +%s)
     ELAPSED=$((NOW - START))
-    if [ "$ELAPSED" -ge 300 ]; then
+    if [ "$ELAPSED" -ge 600 ]; then
       echo "❌ Timeout de 5 minutos esperando que el certificado esté listo"
       exit 1
     fi
-    sleep 10
+    sleep 30
   done
 
   # Exportar certificados
@@ -65,10 +81,50 @@ ssh -i modules/k3s-cluster/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@${modu
   kubectl get secret "$SECRET_NAME" -n argocd -o jsonpath='{.data.tls\.key}' | base64 -d > /tmp/argocd.key
   chmod 600 /tmp/argocd.*
 EOF
+
+ssh -i modules/k3s-cluster/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@<OTRA_IP>
 EOT
   }
   depends_on = [module.helm_releases.argocd]
 }
+# resource "null_resource" "generate_script" {
+#   provisioner "local-exec" {
+#     command = <<EOT
+# cat << 'EOF' > setup.sh
+# #!/bin/bash
+# echo "Este es un script generado por Terraform"
+# chmod 600 /tmp/argocd.*
+# ssh -i modules/k3s-cluster/k3s-key.pem ubuntu@<OTRA_IP>
+
+
+
+
+
+# scp -i /root/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@${var.target_ip}:/tmp/argocd.crt /etc/nginx/certs/argocd.crt || true
+# scp -i /root/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@${var.target_ip}:/tmp/argocd.key /etc/nginx/certs/argocd.key || true
+# chmod 600 /etc/nginx/certs/argocd.*
+
+# 7. Reiniciar NGINX si los certificados fueron copiados
+# if [ -s /etc/nginx/certs/argocd.crt ] && [ -s /etc/nginx/certs/argocd.key ]; then
+#     echo "✅ Certificados reales detectados, reiniciando NGINX con SSL válido"
+#     systemctl restart nginx
+# else
+#     echo "⚠️ Certificados reales no encontrados, continúas con autofirmado"
+# fi
+
+
+
+# scp -i /root/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@44.199.247.204:/tmp/argocd.crt /etc/nginx/certs/argocd.crt || true
+# scp -i /root/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@44.199.247.204:/tmp/argocd.key /etc/nginx/certs/argocd.key || true
+# EOF
+# chmod +x setup.sh
+
+# kubectl --kubeconfig=.\k3s-ec2.yaml get nodes
+# kubectl --kubeconfig=.\modules/k3s-cluster/k3s.yaml get nodes
+# EOT
+#   }
+# }
+
 
 
 resource "aws_iam_role" "ec2_ssm_role" {

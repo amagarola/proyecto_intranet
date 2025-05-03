@@ -87,26 +87,13 @@ ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default || tru
 systemctl reload nginx
 
 # 4. Esperar a que el certificado real esté disponible
-sleep 180
+# sleep 180
 
 # 5. Guardar clave privada para hacer SCP al nodo maestro
-cat <<EOT > /root/k3s-key.pem
-${replace(var.k3s_private_key_pem, "$", "\\$")}
-EOT
-chmod 400 /root/k3s-key.pem
-
-# 6. Intentar obtener certificados reales (si existen)
-scp -i /root/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@${var.target_ip}:/tmp/argocd.crt /etc/nginx/certs/argocd.crt || true
-scp -i /root/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@${var.target_ip}:/tmp/argocd.key /etc/nginx/certs/argocd.key || true
-chmod 600 /etc/nginx/certs/argocd.*
-
-# 7. Reiniciar NGINX si los certificados fueron copiados
-if [ -s /etc/nginx/certs/argocd.crt ] && [ -s /etc/nginx/certs/argocd.key ]; then
-    echo "✅ Certificados reales detectados, reiniciando NGINX con SSL válido"
-    systemctl restart nginx
-else
-    echo "⚠️ Certificados reales no encontrados, continúas con autofirmado"
-fi
+# cat <<EOT > /root/k3s-key.pem
+# ${replace(var.k3s_private_key_pem, "$", "\\$")}
+# EOT
+# chmod 400 /root/k3s-key.pem
 
 
 }

@@ -107,3 +107,4 @@ tags
 *k3s-ec2.yaml
 *kubeconfig*
 destroy.sh
+secrets.tfvars

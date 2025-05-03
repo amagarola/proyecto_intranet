@@ -1,0 +1,31 @@
+
+server:
+  service:
+    type: ClusterIP
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - argocd.adrianmagarola.click
+    paths:
+      - /
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt"
+    tls:
+      - hosts:
+          - argocd.adrianmagarola.click
+        secretName: argocd-tls
+  extraArgs:
+    - --insecure
+
+configs:
+  cm:
+    url: https://argocd.adrianmagarola.click
+    oidc.config: |
+      name: GitHub
+      issuer: https://github.com
+      clientID: ${GITHUB_CLIENT_ID}
+      clientSecret: $oidc.github.clientSecret
+      requestedScopes: ["openid", "user", "email"]
+  secret:
+    oidc.github.clientSecret: ${GITHUB_CLIENT_SECRET}
