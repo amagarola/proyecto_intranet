@@ -5,6 +5,7 @@ metadata:
   labels:
     app: {{ .Chart.Name }}
 spec:
+  revisionHistoryLimit: 0
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -23,7 +24,7 @@ spec:
           args:
             - --provider={{ .Values.config.provider }}
             - --email-domain={{ .Values.config.emailDomains | join "," }}
-            - --upstream=http://grafana.monitoring.svc.cluster.local:3000
+            # - --upstream=http://grafana.monitoring.svc.cluster.local:3000
             - --upstream=http://argocd-server.argocd.svc.cluster.local:80
             - --cookie-secure={{ .Values.config.cookie.secure }}
             - --cookie-expire={{ .Values.config.cookie.expire }}
