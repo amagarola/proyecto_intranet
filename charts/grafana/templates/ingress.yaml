@@ -7,6 +7,7 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    cert-manager.io/cluster-issuer: letsencrypt
 spec:
   ingressClassName: nginx  # Asegúrate de que tu cluster use este ingress class
   rules:
