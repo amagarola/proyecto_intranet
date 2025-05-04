@@ -7,7 +7,8 @@ spec:
   project: default
   source:
     repoURL: https://github.com/amagarola/proyecto_intranet.git
-    targetRevision: HEAD
+    targetRevision: main
+    # Si estás utilizando un repositorio de Helm, asegúrate de que la URL sea correcta
     path: charts/grafana
     helm:
       valueFiles:

@@ -14,7 +14,6 @@ spec:
       labels:
         app: grafana
     spec:
-      nodeSelector: node-role.kubernetes.io/worker: "true"
       containers:
       - name: grafana
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
