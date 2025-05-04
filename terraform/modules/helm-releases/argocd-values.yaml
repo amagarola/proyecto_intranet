@@ -28,4 +28,6 @@ configs:
     rbac.policy.csv: |
       g, adrianmagarola@gmail.com, role:admin
       g, ops@example.com, role:read-only
+  rbac:
+    scopes: '[email, groups]'
 

@@ -24,12 +24,15 @@ spec:
           args:
             - --provider={{ .Values.config.provider }}
             - --email-domain={{ .Values.config.emailDomains | join "," }}
-            # - --upstream=http://grafana.monitoring.svc.cluster.local:3000
-            - --upstream=http://argocd-server.argocd.svc.cluster.local:80
+            # - --upstream=http://argocd-server.argocd.svc.cluster.local:80 # Removed upstream
             - --cookie-secure={{ .Values.config.cookie.secure }}
             - --cookie-expire={{ .Values.config.cookie.expire }}
             - --cookie-refresh={{ .Values.config.cookie.refresh }}
-            - --http-address=0.0.0.0:4180
+            - --http-address=0.0.0.0:{{ .Values.service.port }}
+            - --redirect-url={{ .Values.config.redirect_url }} # Added redirect URL
+            - --set-xauthrequest=true # Added set-xauthrequest
+            - --pass-access-token=false # Added pass-access-token
+            - --pass-authorization-header=false # Added pass-authorization-header
           env:
             - name: OAUTH2_PROXY_CLIENT_ID
               valueFrom:
