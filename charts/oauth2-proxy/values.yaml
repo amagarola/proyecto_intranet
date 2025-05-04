@@ -22,7 +22,7 @@ ingress:
 config:
   provider: github
   emailDomains:
-    - *
+    - "*"
   upstreams:
   - id: grafana
     path: /grafana
