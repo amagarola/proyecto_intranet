@@ -84,8 +84,8 @@ server {
     listen 443 ssl;
     server_name ${var.domains[1]};
 
-    ssl_certificate /etc/nginx/certs/argocd.crt;
-    ssl_certificate_key /etc/nginx/certs/argocd.key;
+    ssl_certificate /etc/nginx/certs/adrianmagarola.crt;
+    ssl_certificate_key /etc/nginx/certs/adrianmagarola.key;
 
     location / {
         proxy_pass https://${var.target_ip}:${var.target_port_https};

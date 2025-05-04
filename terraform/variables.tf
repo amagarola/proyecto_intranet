@@ -6,6 +6,7 @@ variable "domains" {
     "argocd.adrianmagarola.click",
     "wikijs.adrianmagarola.click",
     "grafana.adrianmagarola.click",
+    "auth.adrianmagarola.click",
   ]
 }
 

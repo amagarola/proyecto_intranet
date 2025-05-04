@@ -16,15 +16,11 @@ spec:
           clientSecret: ""
           cookieSecret: ""
           provider: github
-          emailDomains:
+          email_domains:
             - "*"
-          githubOrg: ""
-          githubTeam: ""
-
-    provider = "github"
-    email_domains = [ "*" ]
-    upstreams = [ "file:///dev/null" ]
-    redirect_url = "https://auth.adrianmagarola.click/oauth2/callback"
+          upstreams:
+            - file:///dev/null
+          redirect_url: https://auth.adrianmagarola.click/oauth2/callback
 
         ingress:
           ingressClassName: nginx
