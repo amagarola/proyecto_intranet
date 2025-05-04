@@ -109,3 +109,4 @@ tags
 destroy.sh
 secrets.tfvars
 k3s.yaml
+cm.yaml

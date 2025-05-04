@@ -6,33 +6,12 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://oauth2-proxy.github.io/manifests
+    repoURL: https://github.com/amagarola/proyecto_intranet.git
     chart: oauth2-proxy
-    targetRevision: 6.10.1
+    targetRevision: main
     helm:
-      values: |
-        config:
-          clientID: ""
-          clientSecret: ""
-          cookieSecret: ""
-          provider: github
-          email_domains:
-            - "*"
-          upstreams:
-            - file:///dev/null
-          redirect_url: https://auth.adrianmagarola.click/oauth2/callback
-
-        ingress:
-          ingressClassName: nginx
-          enabled: true
-          hosts:
-            - auth.adrianmagarola.click
-          tls:
-            - hosts:
-                - auth.adrianmagarola.click
-              secretName: oauth2-tls
-          annotations:
-            cert-manager.io/cluster-issuer: letsencrypt
+      valueFiles:
+        - values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: auth

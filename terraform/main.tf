@@ -1,5 +1,3 @@
-# Genera una clave privada RSA para usarla en la conexión SSH
-
 module "k3s_cluster" {
   source               = "./modules/k3s-cluster"
   security_group_id    = aws_security_group.k3s_sg.id
@@ -33,108 +31,58 @@ module "proxy" {
 }
 
 # resource "null_resource" "extract_tls_cert" {
-#   provisioner "local-exec" {
-#     command     = <<EOT
-#     cat << 'EOF' > ./my_ssh_config
-# Host k3s
-#   HostName ${module.k3s_cluster.master_public_ip}
-#   User ubuntu
-#   IdentityFile modules/k3s-cluster/k3s-key.pem
-#   StrictHostKeyChecking no
-#   UserKnownHostsFile=/dev/null
+#   provisioner "remote-exec" {
+#     inline = [
+#       <<-EOT
+#         #!/bin/bash
+#         ssh -F ./my_ssh_config k3s <<'EOF'
+#         set -euxo pipefail
 
-# Host proxy
-#   HostName ${module.proxy.proxy_public_ip}
-#   User ubuntu
-#   IdentityFile modules/proxy/ec2-proxy-key.pem
-#   ProxyJump k3s
-#   StrictHostKeyChecking no
-#   UserKnownHostsFile=/dev/null
-# EOF
-#   ssh -F ./my_ssh_config k3s <<'EOF'
-#   set -euxo pipefail
+#         sudo apt-get install -y jq
 
-#   sudo apt-get install -y jq
+#         export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+#         echo "🔍 Esperando certificado TLS válido para ArgoCD..."
 
-#   export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-#   echo "🔍 Esperando certificado TLS válido para ArgoCD..."
+#         START=$(date +%s)
+#         while true; do
+#           SECRET_NAME=$(kubectl get secret -n argocd -o json | jq -r '.items[] | select(.metadata.name | startswith("argocd-tls")) | .metadata.name' | head -n1 || true)
+#           if [ -n "$SECRET_NAME" ]; then
+#             STATUS=$(kubectl get certificate argocd-tls -n argocd -o json | jq -r '.status.conditions[]? | select(.type=="Ready") | .status' || true)
+#             if [ "$STATUS" = "True" ]; then
+#               echo "✅ Certificado $SECRET_NAME está listo."
+#               break
+#             fi
+#             echo "⏳ Certificado encontrado pero aún no está listo. Esperando..."
+#           else
+#             echo "🔍 Buscando secret TLS que comience con 'argocd-tls'..."
+#           fi
 
-#   START=$(date +%s)
-#   while true; do
-#     SECRET_NAME=$(kubectl get secret -n argocd -o json | jq -r '.items[] | select(.metadata.name | startswith("argocd-tls")) | .metadata.name' | head -n1 || true)
-#     if [ -n "$SECRET_NAME" ]; then
-#       STATUS=$(kubectl get certificate argocd-tls -n argocd -o json | jq -r '.status.conditions[]? | select(.type=="Ready") | .status' || true)
-#       if [ "$STATUS" = "True" ]; then
-#         echo "✅ Certificado $SECRET_NAME está listo."
-#         break
-#       fi
-#       echo "⏳ Certificado encontrado pero aún no está listo. Esperando..."
-#     else
-#       echo "🔍 Buscando secret TLS que comience con 'argocd-tls'..."
-#     fi
+#           NOW=$(date +%s)
+#           ELAPSED=$((NOW - START))
+#           if [ "$ELAPSED" -ge 600 ]; then
+#             echo "❌ Timeout de 5 minutos esperando que el certificado esté listo"
+#             exit 1
+#           fi
+#           sleep 30
+#         done
 
-#     NOW=$(date +%s)
-#     ELAPSED=$((NOW - START))
-#     if [ "$ELAPSED" -ge 600 ]; then
-#       echo "❌ Timeout de 5 minutos esperando que el certificado esté listo"
-#       exit 1
-#     fi
-#     sleep 30
-#   done
-
-#   # Exportar certificados
-#   kubectl get secret "$SECRET_NAME" -n argocd -o jsonpath='{.data.tls\.crt}' | base64 -d > /tmp/argocd.crt
-#   kubectl get secret "$SECRET_NAME" -n argocd -o jsonpath='{.data.tls\.key}' | base64 -d > /tmp/argocd.key
-#   chmod 600 /tmp/argocd.*
-# EOF
-
-# scp -F ./my_ssh_config -o ProxyJump=k3s /tmp/argocd.crt proxy:/etc/nginx/certs/argocd.crt 
-# scp -F ./my_ssh_config -o ProxyJump=k3s /tmp/argocd.key proxy:/etc/nginx/certs/argocd.key
-
-# EOT
-
+#         # Exportar certificados
+#         kubectl get secret "$SECRET_NAME" -n argocd -o jsonpath='{.data.tls\\.crt}' | base64 -d > /tmp/argocd.crt
+#         kubectl get secret "$SECRET_NAME" -n argocd -o jsonpath='{.data.tls\\.key}' | base64 -d > /tmp/argocd.key
+#         chmod 600 /tmp/argocd.*
+#         EOF
+#       EOT,
+#       <<-EOT
+#         scp -F ./my_ssh_config -o ProxyJump=k3s /tmp/argocd.crt proxy:/etc/nginx/certs/argocd.crt
+#         scp -F ./my_ssh_config -o ProxyJump=k3s /tmp/argocd.key proxy:/etc/nginx/certs/argocd.key
+#       EOT
+#     ]
 #   }
-#   depends_on = [module.helm_releases]
+
+#   depends_on = [
+#     module.helm_releases
+#   ]
 # }
-# # resource "null_resource" "generate_script" {
-#   provisioner "local-exec" {
-#     command = <<EOT
-# cat << 'EOF' > setup.sh
-# #!/bin/bash
-# echo "Este es un script generado por Terraform"
-# chmod 600 /tmp/argocd.*
-# ssh -i modules/k3s-cluster/k3s-key.pem ubuntu@<OTRA_IP>
-
-
-
-
-
-# scp -i /root/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@${var.target_ip}:/tmp/argocd.crt /etc/nginx/certs/argocd.crt || true
-# scp -i /root/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@${var.target_ip}:/tmp/argocd.key /etc/nginx/certs/argocd.key || true
-# chmod 600 /etc/nginx/certs/argocd.*
-
-# 7. Reiniciar NGINX si los certificados fueron copiados
-# if [ -s /etc/nginx/certs/argocd.crt ] && [ -s /etc/nginx/certs/argocd.key ]; then
-#     echo "✅ Certificados reales detectados, reiniciando NGINX con SSL válido"
-#     systemctl restart nginx
-# else
-#     echo "⚠️ Certificados reales no encontrados, continúas con autofirmado"
-# fi
-
-
-
-# scp -i /root/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@44.199.247.204:/tmp/argocd.crt /etc/nginx/certs/argocd.crt || true
-# scp -i /root/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@44.199.247.204:/tmp/argocd.key /etc/nginx/certs/argocd.key || true
-# EOF
-# chmod +x setup.sh
-
-# kubectl --kubeconfig=.\k3s-ec2.yaml get nodes
-# kubectl --kubeconfig=.\modules/k3s-cluster/k3s.yaml get nodes
-# EOT
-#   }
-# }
-
-
 
 resource "aws_iam_role" "ec2_ssm_role" {
   name = "ec2-ssm-role"
@@ -159,3 +107,4 @@ resource "aws_iam_instance_profile" "ec2_ssm_profile" {
   name = "ec2-ssm-profile"
   role = aws_iam_role.ec2_ssm_role.name
 }
+

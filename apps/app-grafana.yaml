@@ -8,11 +8,10 @@ spec:
   source:
     repoURL: https://github.com/amagarola/proyecto_intranet.git
     targetRevision: main
-    # Si estás utilizando un repositorio de Helm, asegúrate de que la URL sea correcta
     path: charts/grafana
     helm:
       valueFiles:
-        - values.yaml  # Asegúrate de que exista en esa carpeta o cámbialo según corresponda
+        - values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

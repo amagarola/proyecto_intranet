@@ -9,7 +9,20 @@ provider "kubernetes" {
   client_key             = base64decode(trimspace(data.external.kubeconfig.result["key"]))
   cluster_ca_certificate = base64decode(trimspace(data.external.kubeconfig.result["ca"]))
   client_certificate     = base64decode(trimspace(data.external.kubeconfig.result["cert"]))
+  # config_path            = "${path.module}/modules/k3s-cluster/kubeconfig"
 }
+locals {
+  app_files = fileset("../../apps", "*.yaml")
+}
+
+resource "kubernetes_manifest" "applications" {
+  for_each = { for f in local.app_files : f => yamldecode(file("../../apps/${f}")) }
+
+  manifest = each.value
+
+  depends_on = [module.helm_releases]
+}
+
 
 provider "helm" {
   kubernetes {
