@@ -9,6 +9,7 @@ metadata:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
     cert-manager.io/cluster-issuer: letsencrypt
 spec:
+  ingressClassName: nginx
   rules:
     - host: auth.adrianmagarola.click
       http:
