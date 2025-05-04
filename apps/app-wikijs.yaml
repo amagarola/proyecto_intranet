@@ -1,11 +1,23 @@
-apiVersion: apps/v1
+apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: app-wikijs
-  labels:
-    app: wikijs
+  name: wikijs
+  namespace: argocd
 spec:
-  selector:
-    matchLabels:
-      app: wikijs
-  description: Wiki.js application configuration
+  project: default
+  source:
+    repoURL: https://github.com/amagarola/proyecto_intranet.git
+    targetRevision: HEAD
+    path: charts/wikijs
+    helm:
+      valueFiles:
+        - values.yaml  # Asegúrate de que exista en esa carpeta o cámbialo según corresponda
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wikijs
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -9,3 +9,4 @@ service:
 resources: {}
 ingress:
   enabled: false
+  host: wikijs.adrianmagarola.click

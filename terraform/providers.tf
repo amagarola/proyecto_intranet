@@ -1,5 +1,7 @@
 provider "aws" {
-  region = "us-east-1"
+  region     = "us-east-1"
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
 }
 
 provider "kubernetes" {
@@ -15,6 +17,5 @@ provider "helm" {
     client_key             = base64decode(trimspace(data.external.kubeconfig.result["key"]))
     cluster_ca_certificate = base64decode(trimspace(data.external.kubeconfig.result["ca"]))
     client_certificate     = base64decode(trimspace(data.external.kubeconfig.result["cert"]))
-    # insecure           = true
   }
 }

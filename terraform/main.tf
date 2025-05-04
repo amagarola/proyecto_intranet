@@ -10,6 +10,12 @@ module "helm_releases" {
   source        = "./modules/helm-releases"
   depends_on    = [module.k3s_cluster]
   k3s_master_ip = module.k3s_cluster.master_public_ip
+
+  # Pasar las variables de GitHub al módulo
+  github_client_id     = var.github_client_id
+  github_client_secret = var.github_client_secret
+  github_token         = var.github_token
+
 }
 
 module "proxy" {
@@ -33,19 +39,19 @@ resource "null_resource" "extract_tls_cert" {
 Host k3s
   HostName ${module.k3s_cluster.master_public_ip}
   User ubuntu
-  IdentityFile /modules/k3s-cluster/k3s-key.pem
+  IdentityFile modules/k3s-cluster/k3s-key.pem
   StrictHostKeyChecking no
   UserKnownHostsFile=/dev/null
 
 Host proxy
-  HostName ${module.proxy.public_ip}
+  HostName ${module.proxy.proxy_public_ip}
   User ubuntu
-  IdentityFile /modules/proxy/ec2-proxy-key.pem
+  IdentityFile modules/proxy/ec2-proxy-key.pem
   ProxyJump k3s
   StrictHostKeyChecking no
   UserKnownHostsFile=/dev/null
 EOF
-  ssh -i modules/k3s-cluster/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@${module.k3s_cluster.master_public_ip} <<'EOF'
+  ssh -F ./my_ssh_config k3s <<'EOF'
   set -euxo pipefail
 
   sudo apt-get install -y jq
@@ -82,7 +88,9 @@ EOF
   chmod 600 /tmp/argocd.*
 EOF
 
-ssh -i modules/k3s-cluster/k3s-key.pem -o StrictHostKeyChecking=no ubuntu@<OTRA_IP>
+scp -F ./my_ssh_config -o ProxyJump=k3s /tmp/argocd.crt proxy:/etc/nginx/certs/argocd.crt 
+scp -F ./my_ssh_config -o ProxyJump=k3s /tmp/argocd.key proxy:/etc/nginx/certs/argocd.key
+
 EOT
   }
   depends_on = [module.helm_releases.argocd]

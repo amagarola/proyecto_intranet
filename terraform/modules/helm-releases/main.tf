@@ -70,47 +70,15 @@ resource "helm_release" "argocd" {
   version          = "5.55.0"
   namespace        = "argocd"
   create_namespace = true
+  cleanup_on_fail  = true
+  force_update     = true
 
-  set {
-    name  = "server.service.type"
-    value = "ClusterIP"
-  }
-
-  # Habilitar Ingress y asociar al host
-  set {
-    name  = "server.ingress.enabled"
-    value = "true"
-  }
-  set {
-    name  = "server.ingress.ingressClassName"
-    value = "nginx"
-  }
-  set {
-    name  = "server.ingress.hosts[0]"
-    value = "argocd.adrianmagarola.click"
-  }
-  set {
-    name  = "server.ingress.paths[0]"
-    value = "/"
-  }
-
-  # TLS usando cert-manager ClusterIssuer
-  set {
-    name  = "server.ingress.annotations.cert-manager\\.io/cluster-issuer"
-    value = "letsencrypt"
-  }
-  set {
-    name  = "server.ingress.tls[0].hosts[0]"
-    value = "argocd.adrianmagarola.click"
-  }
-  set {
-    name  = "server.ingress.tls[0].secretName"
-    value = "argocd-tls"
-  }
-  set {
-    name  = "server.extraArgs"
-    value = "{--insecure}"
-  }
+  values = [
+    templatefile("${path.module}/argocd-values.yaml", {
+      GITHUB_CLIENT_ID     = var.github_client_id
+      GITHUB_CLIENT_SECRET = var.github_client_secret
+    })
+  ]
 }
 ###############################################################################
 # Letsencrypt issuer

@@ -1,4 +1,3 @@
-
 resource "tls_private_key" "ec2-proxy" {
   algorithm = "RSA"
   rsa_bits  = 4096
@@ -43,11 +42,11 @@ mkdir -p /etc/nginx/certs/
 
 # 1. Generar certificados autofirmados iniciales
 openssl req -x509 -nodes -days 3 -newkey rsa:2048 \
-  -keyout /etc/nginx/certs/argocd.key \
-  -out /etc/nginx/certs/argocd.crt \
+  -keyout /etc/nginx/certs/adrianmagarola.key \
+  -out /etc/nginx/certs/adrianmagarola.crt \
   -subj "/CN=${var.domains[0]}"
 
-chmod 600 /etc/nginx/certs/argocd.*
+chmod 600 /etc/nginx/certs/adrianmagarola.*
 
 # 2. Insertar include en nginx.conf si falta
 grep -q "sites-enabled" /etc/nginx/nginx.conf || \
@@ -68,7 +67,22 @@ server {
 
 server {
     listen 443 ssl;
-    server_name ${join(" ", var.domains)};
+    server_name ${join(" ", [var.domains[0], var.domains[2], var.domains[3]])};
+
+    ssl_certificate /etc/nginx/certs/adrianmagarola.crt;
+    ssl_certificate_key /etc/nginx/certs/adrianmagarola.key;
+
+    location / {
+        proxy_pass https://${var.target_ip}:${var.target_port_https};
+        proxy_ssl_verify off;
+        proxy_ssl_session_reuse off;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+}
+server {
+    listen 443 ssl;
+    server_name ${var.domains[1]};
 
     ssl_certificate /etc/nginx/certs/argocd.crt;
     ssl_certificate_key /etc/nginx/certs/argocd.key;
@@ -81,6 +95,7 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
     }
 }
+
 EOT
 
 ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default || true

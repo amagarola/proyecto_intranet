@@ -9,3 +9,10 @@ service:
 resources: {}
 ingress:
   enabled: false
+nodeSelector:
+  node-role.kubernetes.io/worker: "true"
+prometheus:
+  replicaCount: 1
+  image:
+    repository: "prom/prometheus"
+    tag: "latest"

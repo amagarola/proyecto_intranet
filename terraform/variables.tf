@@ -3,7 +3,9 @@ variable "domains" {
   description = "Lista de dominios"
   default = [
     "adrianmagarola.click",
-    "argocd.adrianmagarola.click"
+    "argocd.adrianmagarola.click",
+    "wikijs.adrianmagarola.click",
+    "grafana.adrianmagarola.click",
   ]
 }
 
@@ -70,6 +72,12 @@ variable "aws_access_key" {
 
 variable "aws_secret_key" {
   description = "Clave secreta de AWS (Secret Access Key)"
+  type        = string
+  sensitive   = true
+}
+
+variable "cookie_secret" {
+  description = "Cookie Secret para OAuth2 Proxy"
   type        = string
   sensitive   = true
 }

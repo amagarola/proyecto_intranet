@@ -1,0 +1,49 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: oauth2-proxy
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://oauth2-proxy.github.io/manifests
+    chart: oauth2-proxy
+    targetRevision: 6.10.1
+    helm:
+      values: |
+        config:
+          clientID: ""
+          clientSecret: ""
+          cookieSecret: ""
+          provider: github
+          emailDomains:
+            - "*"
+          githubOrg: ""
+          githubTeam: ""
+
+    provider = "github"
+    email_domains = [ "*" ]
+    upstreams = [ "file:///dev/null" ]
+    redirect_url = "https://auth.adrianmagarola.click/oauth2/callback"
+
+        ingress:
+          ingressClassName: nginx
+          enabled: true
+          ingressClassName: nginx
+          hosts:
+            - auth.adrianmagarola.click
+          tls:
+            - hosts:
+                - auth.adrianmagarola.click
+              secretName: oauth2-tls
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: auth
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

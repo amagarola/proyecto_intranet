@@ -1,4 +1,3 @@
-
 server:
   service:
     type: ClusterIP
@@ -11,6 +10,9 @@ server:
       - /
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt"
+      nginx.ingress.kubernetes.io/auth-url: "https://auth.adrianmagarola.click/oauth2/auth"
+      nginx.ingress.kubernetes.io/auth-signin: "https://auth.adrianmagarola.click/oauth2/start?rd=$scheme://$host$request_uri"
+      nginx.ingress.kubernetes.io/auth-response-headers: "X-Auth-Request-User, X-Auth-Request-Email"
     tls:
       - hosts:
           - argocd.adrianmagarola.click
@@ -21,11 +23,9 @@ server:
 configs:
   cm:
     url: https://argocd.adrianmagarola.click
-    oidc.config: |
-      name: GitHub
-      issuer: https://github.com
-      clientID: ${GITHUB_CLIENT_ID}
-      clientSecret: $oidc.github.clientSecret
-      requestedScopes: ["openid", "user", "email"]
-  secret:
-    oidc.github.clientSecret: ${GITHUB_CLIENT_SECRET}
+    rbac.header: X-Auth-Request-Email
+    rbac.policy.default: role:none
+    rbac.policy.csv: |
+      g, adrianmagarola@gmail.com, role:admin
+      g, ops@example.com, role:read-only
+

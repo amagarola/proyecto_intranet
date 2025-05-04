@@ -1,0 +1,14 @@
+Host k3s
+  HostName 44.200.2.101
+  User ubuntu
+  IdentityFile modules/k3s-cluster/k3s-key.pem
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null
+
+Host proxy
+  HostName 3.233.240.29
+  User ubuntu
+  IdentityFile modules/proxy/ec2-proxy-key.pem
+  ProxyJump k3s
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null

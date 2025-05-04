@@ -14,8 +14,9 @@ spec:
       labels:
         app: grafana
     spec:
+      nodeSelector: {{ .Values.nodeSelector }}
       containers:
       - name: grafana
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         ports:
-        - containerPort: 3000
+        - containerPort: {{ .Values.service.port }}
