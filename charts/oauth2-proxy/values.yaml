@@ -20,12 +20,17 @@ ingress:
   tls: []
 
 config:
-  provider: google
+  provider: github
   emailDomains:
-    - example.com
+    - *
   upstreams:
-    - http://grafana.monitoring.svc.cluster.local:3000
-    - http://argocd-server.argocd.svc.cluster.local:80
+  - id: grafana
+    path: /grafana
+    uri: http://grafana.monitoring.svc.cluster.local:3000
+  - id: argocd
+    path: /argocd
+    uri: http://argocd-server.argocd.svc.cluster.local:80
+
   cookie:
     secure: true
     httpOnly: true
