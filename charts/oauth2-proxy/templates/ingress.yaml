@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: oauth2-proxy-ingress
-  namespace: monitoring
+  namespace: auth
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
@@ -17,7 +17,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ .Release.Name }}-oauth2-proxy
+                name: oauth2-proxy
                 port:
                   number: {{ .Values.service.port }}
   tls:

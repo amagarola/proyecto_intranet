@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/amagarola/proyecto_intranet.git
-    chart: oauth2-proxy
+    path: charts/oauth2-proxy
     targetRevision: main
     helm:
       valueFiles:
