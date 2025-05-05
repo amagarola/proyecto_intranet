@@ -67,7 +67,7 @@ server {
 
 server {
     listen 443 ssl;
-    server_name ${join(" ", [var.domains[0], var.domains[2], var.domains[3]])};
+    server_name ${join(" ", [var.domains[0], var.domains[2], var.domains[3], var.domains[4]])};
 
     ssl_certificate /etc/nginx/certs/adrianmagarola.crt;
     ssl_certificate_key /etc/nginx/certs/adrianmagarola.key;

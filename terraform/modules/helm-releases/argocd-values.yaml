@@ -2,7 +2,7 @@ server:
   service:
     type: ClusterIP
   ingress:
-    enabled: true
+    enabled: false
     ingressClassName: nginx
     hosts:
       - argocd.adrianmagarola.click
@@ -25,9 +25,19 @@ configs:
     url: https://argocd.adrianmagarola.click
     rbac.header: X-Auth-Request-Email
     rbac.policy.default: role:none
-    rbac.policy.csv: |
-      g, adrianmagarola@gmail.com, role:admin
-      g, ops@example.com, role:read-only
-  rbac:
     scopes: '[email, groups]'
-
+    dex.config: |
+      connectors:
+        - type: authproxy
+          id: oauth2-proxy
+          name: OAuth2-Proxy-GitHub
+          config:
+            userHeader: X-Forwarded-User
+            groupHeader: X-Forwarded-Groups
+            staticGroups:
+              - default
+  rbac:
+    policy.csv: |
+      g,adrianmagarola@gmail.com,role:admin
+      g,default,role:readonly
+    policy.default: role:none

@@ -5,6 +5,8 @@ metadata:
   labels:
     app: grafana
 spec:
+  nodeSelector:
+    node-role.k3s.io/master: "true"
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:

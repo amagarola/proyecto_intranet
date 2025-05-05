@@ -12,15 +12,16 @@ provider "kubernetes" {
   # config_path            = "${path.module}/modules/k3s-cluster/kubeconfig"
 }
 locals {
-  app_files = fileset("../../apps", "*.yaml")
+  app_files = fileset("../apps", "*.yaml")
 }
 
 resource "kubernetes_manifest" "applications" {
-  for_each = { for f in local.app_files : f => yamldecode(file("../../apps/${f}")) }
+  for_each = { for f in local.app_files : f => yamldecode(file("../apps/${f}")) }
 
   manifest = each.value
 
   depends_on = [module.helm_releases]
+
 }
 
 

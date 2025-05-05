@@ -5,6 +5,8 @@ metadata:
   labels:
     app: {{ .Chart.Name }}
 spec:
+  nodeSelector:
+    node-role.k3s.io/master: "true"
   revisionHistoryLimit: 0
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -33,6 +35,8 @@ spec:
             - --set-xauthrequest=true # Added set-xauthrequest
             - --pass-access-token=false # Added pass-access-token
             - --pass-authorization-header=false # Added pass-authorization-header
+            - --whitelist-domain=.adrianmagarola.click
+            - --cookie-domain=.adrianmagarola.click
           env:
             - name: OAUTH2_PROXY_CLIENT_ID
               valueFrom:
@@ -49,17 +53,3 @@ spec:
                 secretKeyRef:
                   name: oauth2-proxy-secret
                   key: cookie-secret
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: oauth2-proxy
-  labels:
-    app: {{ .Chart.Name }}
-spec:
-  type: {{ .Values.service.type }}
-  ports:
-    - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.port }}
-  selector:
-    app: {{ .Chart.Name }}
