@@ -4,6 +4,11 @@ provider "aws" {
   secret_key = var.aws_secret_key
 }
 
+provider "github" {
+  token = var.github_token
+  owner = "amagarola"
+}
+
 # provider "kubernetes" {
 #   host                   = "https://${module.k3s_cluster.master_public_ip}:6443"
 #   client_key             = base64decode(trimspace(data.external.kubeconfig.result["key"]))

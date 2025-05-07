@@ -108,3 +108,29 @@ resource "aws_iam_instance_profile" "ec2_ssm_profile" {
   role = aws_iam_role.ec2_ssm_role.name
 }
 
+resource "github_actions_secret" "aws_access_key" {
+  repository      = "proyecto_intranet"
+  secret_name     = "AWS_ACCESS_KEY_ID"
+  plaintext_value = var.aws_access_key
+}
+resource "github_actions_secret" "aws_secret_key" {
+  repository      = "proyecto_intranet"
+  secret_name     = "AWS_SECRET_ACCESS_KEY"
+  plaintext_value = var.aws_secret_key
+}
+
+resource "github_actions_variable" "master_private_ip" {
+  repository    = "proyecto_intranet"
+  variable_name = "master_private_ip"
+  value         = var.master_private_ip
+}
+resource "github_actions_variable" "master_private_ip" {
+  repository    = "proyecto_intranet"
+  variable_name = "master_private_ip"
+  value         = var.master_private_ip
+}
+resource "github_actions_variable" "proxy_public_ip" {
+  repository    = "proyecto_intranet"
+  variable_name = "proxy_public_ip"
+  value         = var.proxy_public_ip
+}
