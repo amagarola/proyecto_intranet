@@ -27,25 +27,53 @@ El sistema sigue este flujo general:
 
 1.  **Terraform**: Provisiona la infraestructura base en AWS (EC2 para k3s y proxy, roles IAM, S3 para estado remoto).
 2.  **k3s**: Se instala en la instancia EC2 master mediante `remote-exec`.
-3.  **Helm (vía Terraform)**: Despliega cert-manager, ingress-nginx, ArgoCD y el ClusterIssuer de Let's Encrypt.
-4.  **ArgoCD**: Se configura para monitorizar el repositorio Git.
-5.  **ArgoCD Applications (`apps/*.yaml`)**: Definen las aplicaciones (WordPress, Prometheus, Grafana, Wiki.js) que ArgoCD debe desplegar usando los Helm Charts del repositorio.
+<!-- 3.  **Helm (vía Terraform)**: Despliega cert-manager, ingress-nginx, ArgoCD y el ClusterIssuer de Let's Encrypt. -->
+<!-- 4.  **ArgoCD**: Se configura para monitorizar el repositorio Git. -->
+<!-- 5.  **ArgoCD Applications (`apps/*.yaml`)**: Definen las aplicaciones (WordPress, Prometheus, Grafana, Wiki.js) que ArgoCD debe desplegar usando los Helm Charts del repositorio. -->
 6.  **Proxy NGINX**: Se configura en una EC2 separada para enrutar el tráfico externo hacia el Ingress Controller de k3s (NodePort).
+<!-- 7.  **GitHub Actions (Futuro)**: Desplegará las aplicaciones y configuraciones de Kubernetes (Helm charts, manifests) en el clúster k3s. -->
 
-```
-  +------------------+           +----------------------+           +----------------------+
-  |                  |           |                      |           |                      |
-  |  GitHub Repo     | <-------> |       ArgoCD         | --------> |   Kubernetes (k3s)   |
-  | (IaC, GitOps)    |           | (Continuous Delivery)|           |   (EC2 Master)       |
-  +------------------+           +----------------------+           +----------+-----------+
-          |                                                                     |
-          |                                                            (NodePort Service)
-          v                                                                     |
-  +------------------+           +----------------------+           +----------+-----------+
-  |                  |           |                      |           |                      |
-  |   Terraform      | --------> |   Proxy NGINX        | <-------- | Ingress Controller   |
-  | (Infraestructura)|           |   (EC2 Proxy)        |           |   (nginx)            |
-  +------------------+           +----------------------+           +----------------------+
+```mermaid
+graph LR
+    subgraph AWS Cloud
+        direction LR
+        EC2_Master[EC2 Master (k3s)]
+        EC2_Proxy[EC2 Proxy (NGINX)]
+        S3_Backend[S3 (Terraform State)]
+        IAM_Roles[IAM Roles]
+    end
+
+    subgraph Local/CI
+        direction TB
+        Terraform[Terraform CLI]
+        GitHub_Actions[GitHub Actions (CI/CD)]
+        Git_Repo[GitHub Repo (Code)]
+    end
+
+    subgraph Kubernetes Cluster (on EC2 Master)
+        direction TB
+        Ingress[Ingress Controller (nginx)]
+        CertManager[Cert-Manager]
+        ArgoCD[ArgoCD (Optional - Deployed by Pipeline)]
+        Apps[Applications (WP, Grafana, etc.)]
+    end
+
+    Terraform -- Provisions --> EC2_Master
+    Terraform -- Provisions --> EC2_Proxy
+    Terraform -- Uses --> S3_Backend
+    Terraform -- Configures --> IAM_Roles
+
+    Git_Repo -- Triggers --> GitHub_Actions
+    GitHub_Actions -- Runs --> Terraform
+    GitHub_Actions -- Deploys --> Ingress
+    GitHub_Actions -- Deploys --> CertManager
+    GitHub_Actions -- Deploys --> ArgoCD
+    GitHub_Actions -- Deploys --> Apps
+
+    User --> EC2_Proxy -- Forwards --> Ingress -- Routes --> Apps
+
+    %% ArgoCD (if used) pulls from Git Repo and deploys Apps
+    %% Git_Repo --> ArgoCD --> Apps
 ```
 
 ## Instrucciones de Despliegue
@@ -67,7 +95,8 @@ terraform init
 terraform apply # (o terraform apply -var-file="secrets.tfvars")
 ```
 
-Despliega la infraestructura AWS, instala k3s, y despliega los Helm charts base (cert-manager, ingress-nginx, ArgoCD).
+Despliega la infraestructura AWS e instala k3s en el nodo master.
+<!-- Despliega la infraestructura AWS, instala k3s, y despliega los Helm charts base (cert-manager, ingress-nginx, ArgoCD). -->
 
 ### 3. Configuración del Contexto Kubernetes
 
@@ -90,7 +119,7 @@ kubectl get pods -A # Ver pods en todos los namespaces
 ```
 
 ### 4. Acceso a ArgoCD
-
+<!--
 ArgoCD se expone a través del Ingress en `argocd.adrianmagarola.click` (o el dominio configurado). Terraform configura el Ingress para usar Let's Encrypt.
 
 Obtén la contraseña inicial:
@@ -100,14 +129,18 @@ kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.pas
 ```
 
 Accede a la UI de ArgoCD y loguéate con `admin` y la contraseña obtenida.
+-->
+**(Nota: ArgoCD y otras aplicaciones ahora se desplegarán mediante pipelines de GitHub Actions, no directamente por Terraform.)**
 
 ### 5. Despliegue de Aplicaciones (GitOps)
-
+<!--
 Las aplicaciones definidas en `apps/*.yaml` (WordPress, Prometheus, Grafana, Wiki.js) deberían empezar a sincronizarse automáticamente en ArgoCD. Verifica su estado en la UI.
 
 *   **WordPress**: Accesible en el dominio principal (`adrianmagarola.click`).
 *   **Grafana/Prometheus**: Desplegados en el namespace `monitoring`. Se necesita configurar Ingress o Port-forward para acceder.
 *   **Wiki.js**: Desplegado en el namespace `default`. Se necesita configurar Ingress o Port-forward.
+-->
+**(Nota: Las aplicaciones ahora se desplegarán mediante pipelines de GitHub Actions.)**
 
 ### 6. Configuración del Proxy (Opcional - Si no se usa Route53/ALB)
 
@@ -122,7 +155,8 @@ El módulo `proxy` configura NGINX para redirigir el tráfico al NodePort del In
     *   El `data "external" "kubeconfig"` extrae credenciales del clúster para configurar los providers `kubernetes` y `helm`. Esto es práctico pero expone datos sensibles en el estado de Terraform.
     *   Se usan claves SSH (`k3s-key.pem`, `ec2-proxy-key.pem`) directamente en scripts y configuraciones (`null_resource "extract_tls_cert"`). Asegúrate de que `.gitignore` previene su commit.
     *   Se recomienda usar un sistema de gestión de secretos como AWS Secrets Manager o HashiCorp Vault, especialmente para `kubeconfig` y claves.
-*   **Helm Releases**: Desplegar Helm charts con Terraform es útil para componentes base de la infraestructura (cert-manager, ingress, ArgoCD). Asegura la disponibilidad temprana de estos servicios.
+<!-- *   **Helm Releases**: Desplegar Helm charts con Terraform es útil para componentes base de la infraestructura (cert-manager, ingress, ArgoCD). Asegura la disponibilidad temprana de estos servicios. -->
+**(Nota: El despliegue de Helm releases mediante Terraform ha sido comentado para moverlo a pipelines.)**
 
 ### Helm Charts
 *   **WordPress (`charts/wordpress`)**: Usa el chart oficial de Bitnami MariaDB como dependencia. Las credenciales de WordPress y MariaDB se configuran mediante `values.yaml`. Considera usar secretos de Kubernetes en lugar de pasar todo por `values.yaml` directamente.
@@ -130,16 +164,17 @@ El módulo `proxy` configura NGINX para redirigir el tráfico al NodePort del In
 *   **Wiki.js (`charts/wikijs`)**: Chart básico, Ingress deshabilitado por defecto.
 *   **General**: Los charts son simples. Para producción, requerirían configuración de persistencia robusta, recursos (requests/limits), probes (liveness/readiness) y seguridad más detallada.
 
-### ArgoCD
-*   **Aplicaciones (`apps/*.yaml`)**: Definen el despliegue GitOps. La política `syncPolicy: { automated: { prune: true, selfHeal: true } }` es adecuada para mantener la sincronización con Git. `syncOptions: [CreateNamespace=true]` es conveniente pero asegúrate de que los namespaces son los deseados.
-*   **Configuración Ingress (Terraform)**: El Helm release de ArgoCD en `modules/helm-releases/main.tf` está configurado para usar Ingress con Let's Encrypt. Sin embargo, incluye `server.extraArgs = "{--insecure}"`. **Esto debe eliminarse en un entorno de producción** ya que desactiva validaciones TLS.
+<!-- ### ArgoCD -->
+<!-- *   **Aplicaciones (`apps/*.yaml`)**: Definen el despliegue GitOps. La política `syncPolicy: { automated: { prune: true, selfHeal: true } }` es adecuada para mantener la sincronización con Git. `syncOptions: [CreateNamespace=true]` es conveniente pero asegúrate de que los namespaces son los deseados. -->
+<!-- *   **Configuración Ingress (Terraform)**: El Helm release de ArgoCD en `modules/helm-releases/main.tf` está configurado para usar Ingress con Let's Encrypt. Sin embargo, incluye `server.extraArgs = "{--insecure}"`. **Esto debe eliminarse en un entorno de producción** ya que desactiva validaciones TLS. -->
+**(Nota: La configuración y despliegue de ArgoCD mediante Terraform ha sido comentada.)**
 
 ### Seguridad
 *   **Claves y Certificados**: La gestión de claves SSH y certificados (autofirmados iniciales en proxy, extracción de kubeconfig) es un punto crítico. Evita exponer claves privadas. El uso de `cert-manager` para certificados TLS de Ingress es una buena práctica.
 *   **RBAC**: Las políticas RBAC por defecto de k3s, Helm charts y ArgoCD deben revisarse para asegurar el principio de mínimo privilegio.
 *   **Red**: Revisa las reglas de los Security Groups de AWS para limitar el acceso a los puertos necesarios (SSH, HTTP/S, API de K8s si es necesario externamente).
-*   **ArgoCD Insecure Flag**: Eliminar `--insecure` de la configuración del Helm release de ArgoCD.
-*   **Secretos en Git**: Asegúrate de que ningún secreto (claves API, contraseñas, .tfvars, .pem, kubeconfig) se comitee al repositorio Git (verificar `.gitignore`).
+<!-- *   **ArgoCD Insecure Flag**: Eliminar `--insecure` de la configuración del Helm release de ArgoCD. -->
+**(Nota: La configuración de ArgoCD se gestionará en la pipeline.)**
 
 ## Próximos Pasos y Mejoras
 

@@ -4,17 +4,17 @@ module "k3s_cluster" {
   iam_instance_profile = aws_iam_instance_profile.ec2_ssm_profile.name
 }
 
-module "helm_releases" {
-  source        = "./modules/helm-releases"
-  depends_on    = [module.k3s_cluster]
-  k3s_master_ip = module.k3s_cluster.master_public_ip
+# module "helm_releases" {
+#   source        = "./modules/helm-releases"
+#   depends_on    = [module.k3s_cluster]
+#   k3s_master_ip = module.k3s_cluster.master_public_ip
 
-  # Pasar las variables de GitHub al módulo
-  github_client_id     = var.github_client_id
-  github_client_secret = var.github_client_secret
-  github_token         = var.github_token
+#   # Pasar las variables de GitHub al módulo
+#   github_client_id     = var.github_client_id
+#   github_client_secret = var.github_client_secret
+#   github_token         = var.github_token
 
-}
+# }
 
 module "proxy" {
   source               = "./modules/proxy"

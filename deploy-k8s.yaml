@@ -1,0 +1,149 @@
+name: Deploy Kubernetes Resources
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 # Or your desired region
+
+      - name: Install SSH Key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add Master IP to known_hosts
+        run: ssh-keyscan -H ${{ secrets.K3S_MASTER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Setup Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0' # Specify desired kubectl version
+        id: install-kubectl
+
+      - name: Get Kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.K3S_MASTER_IP }} "sudo cat /etc/rancher/k3s/k3s.yaml" > $HOME/.kube/config
+          # Replace localhost with master IP in kubeconfig
+          sed -i 's/127.0.0.1/${{ secrets.K3S_MASTER_IP }}/g' $HOME/.kube/config
+          echo "Kubeconfig retrieved and saved."
+        env:
+          KUBECONFIG: ${{ runner.temp }}/kubeconfig
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'v3.12.0' # Specify desired Helm version
+        id: install-helm
+
+      - name: Add Helm Repositories
+        run: |
+          helm repo add jetstack https://charts.jetstack.io
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          # Add other repos if needed (e.g., argo)
+          # helm repo add argo https://argoproj.github.io/argo-helm
+          helm repo update
+
+      - name: Deploy Cert-Manager
+        run: |
+          helm upgrade --install cert-manager jetstack/cert-manager \
+            --namespace cert-manager \
+            --create-namespace \
+            --version v1.13.2 \
+            --set installCRDs=true \
+            --set startupapicheck.enabled=false \
+            --wait
+
+      - name: Deploy Nginx Ingress Controller
+        run: |
+          helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+            --namespace ingress-nginx \
+            --create-namespace \
+            --version 4.12.1 \
+            --set controller.service.type=NodePort \
+            --set controller.service.nodePorts.http=30080 \
+            --set controller.service.nodePorts.https=30443 \
+            --set controller.nodeSelector."node-role\.k3s\.io/master"="true" \
+            --set controller.ingressClassResource.name=nginx \
+            --set controller.ingressClassResource.controllerValue="k8s.io/ingress-nginx" \
+            --set controller.ingressClassByName=true \
+            --set controller.admissionWebhooks.enabled=false \
+            --set controller.admissionWebhooks.patch.enabled=false \
+            --wait
+
+      - name: Apply LetsEncrypt ClusterIssuer
+        run: |
+          kubectl apply -f terraform/modules/helm-releases/charts/letsencrypt-issuer/templates/clusterissuer.yaml
+
+      - name: Create OAuth2 Proxy Secret
+        run: |
+          kubectl create namespace auth --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create secret generic oauth2-proxy-secret --namespace auth \
+            --from-literal=client-id=${{ secrets.GH_CLIENT_ID }} \
+            --from-literal=client-secret=${{ secrets.GH_CLIENT_SECRET }} \
+            --from-literal=cookie-secret=$(openssl rand -base64 32) \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy OAuth2 Proxy
+        run: |
+          helm upgrade --install oauth2-proxy ./charts/oauth2-proxy \
+            --namespace auth \
+            --create-namespace \
+            -f charts/oauth2-proxy/values.yaml \
+            --set ingress.enabled=true \
+            --wait
+
+      - name: Deploy Prometheus
+        run: |
+          helm upgrade --install prometheus ./charts/prometheus \
+            --namespace monitoring \
+            --create-namespace \
+            -f charts/prometheus/values.yaml \
+            --wait
+
+      - name: Deploy Grafana
+        run: |
+          helm upgrade --install grafana ./charts/grafana \
+            --namespace monitoring \
+            --create-namespace \
+            -f charts/grafana/values.yaml \
+            # Enable ingress if needed, e.g.: --set ingress.enabled=true --set ingress.hosts[0].host=grafana.yourdomain.com
+            --wait
+
+      - name: Deploy WikiJS
+        run: |
+          helm upgrade --install wikijs ./charts/wikijs \
+            --namespace default \
+            -f charts/wikijs/values.yaml \
+            --set ingress.enabled=true \
+            --wait
+
+      # --- Optional: Deploy ArgoCD and Apps ---
+      # Uncomment and adjust if you want the pipeline to deploy ArgoCD
+      # - name: Deploy ArgoCD
+      #   run: |
+      #     helm upgrade --install argocd argo/argo-cd \
+      #       --namespace argocd \
+      #       --create-namespace \
+      #       --version 5.55.0 \
+      #       -f path/to/your/argocd-values.yaml \
+      #       --set configs.secret.githubClientSecret=${{ secrets.GH_CLIENT_SECRET }} \
+      #       --wait
+
+      # - name: Apply ArgoCD Applications
+      #   run: |
+      #     kubectl apply -f apps/

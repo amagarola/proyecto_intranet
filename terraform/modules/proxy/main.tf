@@ -100,17 +100,6 @@ EOT
 
 ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default || true
 systemctl reload nginx
-
-# 4. Esperar a que el certificado real esté disponible
-# sleep 180
-
-# 5. Guardar clave privada para hacer SCP al nodo maestro
-# cat <<EOT > /root/k3s-key.pem
-# ${replace(var.k3s_private_key_pem, "$", "\\$")}
-# EOT
-# chmod 400 /root/k3s-key.pem
-
-
 }
 EOF
 
