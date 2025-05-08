@@ -1,0 +1,64 @@
+name: Deploy Applications
+
+on:
+  workflow_dispatch:
+    inputs:
+      applications:
+        description: "Select applications to deploy"
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - all
+          - oauth2-proxy
+          - wikijs
+          - prometheus
+          - grafana
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Install K3s SSH Key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.K3S_PRIVATE_KEY }}
+
+      - name: Add Master IP to known_hosts
+        run: ssh-keyscan -H ${{ secrets.K3S_MASTER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Setup Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Get Kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.K3S_MASTER_IP }} "sudo cat /etc/rancher/k3s/k3s.yaml" > $HOME/.kube/config
+          sed -i 's/127.0.0.1/${{ secrets.K3S_MASTER_IP }}/g' $HOME/.kube/config
+        env:
+          KUBECONFIG: ${{ runner.temp }}/kubeconfig
+
+      - name: Deploy Applications
+        run: |
+          if [ "${{ inputs.applications }}" = "all" ]; then
+            echo "Deploying all applications..."
+            kubectl apply -f apps/
+          else
+            echo "Deploying selected application: ${{ inputs.applications }}"
+            kubectl apply -f apps/${{ inputs.applications }}.yaml
+          fi
+        env:
+          KUBECONFIG: ${{ runner.temp }}/kubeconfig
