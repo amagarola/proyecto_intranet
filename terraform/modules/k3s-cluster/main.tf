@@ -77,9 +77,6 @@ resource "aws_instance" "master" {
       "kubectl delete svc,deploy -l app.kubernetes.io/name=traefik -n kube-system || true",
 
 
-      "curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash",
-
-
       # ------------------------------------------------------------------
       # 7) Forzar que el kubeconfig generado apunte a la IP pública
       # ------------------------------------------------------------------
