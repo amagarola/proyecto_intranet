@@ -134,3 +134,15 @@ resource "github_actions_variable" "proxy_public_ip" {
   variable_name = "proxy_public_ip"
   value         = var.proxy_public_ip
 }
+
+resource "github_actions_secret" "k3s_private_key" {
+  repository      = "proyecto_intranet"
+  secret_name     = "K3S_PRIVATE_KEY"
+  plaintext_value = file("${path.module}/modules/k3s-cluster/k3s-key.pem")
+}
+
+resource "github_actions_secret" "proxy_private_key" {
+  repository      = "proyecto_intranet"
+  secret_name     = "PROXY_PRIVATE_KEY"
+  plaintext_value = file("${path.module}/modules/proxy/ec2-proxy-key.pem")
+}
