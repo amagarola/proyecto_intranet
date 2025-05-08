@@ -1,0 +1,67 @@
+name: Update NGINX Configuration
+
+on:
+  push:
+    paths:
+      - 'terraform/modules/proxy/**'
+  workflow_dispatch:
+
+jobs:
+  update-nginx:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Install Proxy SSH Key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.PROXY_PRIVATE_KEY }}
+
+      - name: Add Proxy IP to known_hosts
+        run: ssh-keyscan -H ${{ secrets.PROXY_PUBLIC_IP }} >> ~/.ssh/known_hosts
+
+      - name: Update NGINX Configuration
+        run: |
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.PROXY_PUBLIC_IP }} << 'EOF'
+          set -euxo pipefail
+
+          # 3. Crear configuración de NGINX con autofirmado
+          cat <<EOT > /etc/nginx/sites-available/default
+          server {
+              listen 80;
+              server_name ${{ secrets.DOMAIN }};
+
+              location / {
+                  proxy_pass http://${{ secrets.TARGET_IP }}:${{ secrets.TARGET_PORT_HTTP }};
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+              }
+          }
+
+          server {
+              listen 443 ssl;
+              server_name ${{ secrets.DOMAIN }};
+
+              ssl_certificate /etc/nginx/certs/adrianmagarola.crt;
+              ssl_certificate_key /etc/nginx/certs/adrianmagarola.key;
+
+              location / {
+                  proxy_pass https://${{ secrets.TARGET_IP }}:${{ secrets.TARGET_PORT_HTTPS }};
+                  proxy_ssl_verify off;
+                  proxy_ssl_session_reuse off;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+              }
+          }
+          EOT
+          systemctl reload nginx
+          EOF
