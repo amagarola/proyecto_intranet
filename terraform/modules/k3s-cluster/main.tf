@@ -103,7 +103,46 @@ resource "aws_instance" "master" {
       "sudo chown ubuntu:ubuntu /home/ubuntu/.kube/config",
       "alias k='kubectl'",
 
+      # ------------------------------------------------------------------
+      # Instalar Helm y configurar repositorios
+      # ------------------------------------------------------------------
+      "curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash",
+      "helm repo add jetstack https://charts.jetstack.io",
+      "helm repo add argo https://argoproj.github.io/argo-helm",
+      "helm repo add nginx-stable https://kubernetes.github.io/ingress-nginx",
+      "helm repo update",
 
+      # ------------------------------------------------------------------
+      # Desplegar cert-manager
+      # ------------------------------------------------------------------
+      "helm upgrade --install cert-manager jetstack/cert-manager \\",
+      "  --namespace cert-manager \\",
+      "  --create-namespace \\",
+      "  --version v1.13.2 \\",
+      "  --set installCRDs=true \\",
+      "  --set startupapicheck.enabled=false",
+
+      # ------------------------------------------------------------------
+      # Desplegar nginx-ingress
+      # ------------------------------------------------------------------
+      "helm upgrade --install nginx nginx-stable/ingress-nginx \\",
+      "  --namespace ingress-nginx \\",
+      "  --create-namespace \\",
+      "  --version 4.12.1 \\",
+      "  --set controller.service.type=NodePort \\",
+      "  --set controller.service.nodePorts.http=30080 \\",
+      "  --set controller.service.nodePorts.https=30443 \\",
+      "  --set controller.nodeSelector.node-role.k3s.io/master=true \\",
+      "  --set controller.ingressClassResource.name=nginx \\",
+      "  --set controller.ingressClassResource.controllerValue=k8s.io/ingress-nginx \\",
+      "  --set controller.ingressClassByName=true \\",
+      "  --set controller.admissionWebhooks.enabled=false \\",
+      "  --set controller.admissionWebhooks.patch.enabled=false",
+
+      # ------------------------------------------------------------------
+      # Desplegar letsencrypt-issuer
+      # ------------------------------------------------------------------
+      "kubectl apply -f ${path.module}/charts/letsencrypt-issuer",
     ]
     connection {
       type        = "ssh"
