@@ -44,7 +44,7 @@ jobs:
             kubectl apply -f apps/
           else
             echo "Deploying selected application: ${{ inputs.applications }}"
-            kubectl apply -f apps/${{ inputs.applications }}.yaml
+            kubectl apply -f apps/app-${{ inputs.applications }}.yaml
           fi
         env:
           KUBECONFIG: ${{ github.workspace }}/kubeconfig
