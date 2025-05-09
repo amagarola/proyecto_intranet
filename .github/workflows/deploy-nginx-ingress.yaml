@@ -2,10 +2,7 @@ name: Deploy NGINX Ingress
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'charts/nginx-ingress/**'
-      - '.github/workflows/deploy-nginx-ingress.yaml'
+
 
 jobs:
   deploy-nginx-ingress:
