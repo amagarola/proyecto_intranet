@@ -14,38 +14,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+      - name: Set up Kubeconfig
+        run: |
+          echo "$KUBECONFIG" > kubeconfig
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
 
-      - name: Install K3s SSH Key
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.K3S_PRIVATE_KEY }}
+      - name: Set KUBECONFIG env
+        run: echo "KUBECONFIG=$(pwd)/kubeconfig" >> $GITHUB_ENV
 
-      - name: Add Master IP to known_hosts
-        run: ssh-keyscan -H ${{ secrets.K3S_MASTER_IP }} >> ~/.ssh/known_hosts
-
-      - name: Setup Kubectl
+      - name: Set up Kubectl
         uses: azure/setup-kubectl@v3
         with:
           version: 'v1.28.0'
 
-      - name: Get Kubeconfig
-        run: |
-          mkdir -p $HOME/.kube
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.K3S_MASTER_IP }} "sudo cat /etc/rancher/k3s/k3s.yaml" > $HOME/.kube/config
-          sed -i 's/127.0.0.1/${{ secrets.K3S_MASTER_IP }}/g' $HOME/.kube/config
-        env:
-          KUBECONFIG: ${{ runner.temp }}/kubeconfig
-
-      - name: Setup Helm
+      - name: Set up Helm
         uses: azure/setup-helm@v3
         with:
-          version: 'v3.12.0'
+          version: v3.12.0
 
       - name: Add Helm Repositories
         run: |
@@ -61,3 +47,5 @@ jobs:
             -f terraform/modules/helm-releases/argocd-values.yaml \
             --set configs.secret.githubClientSecret=${{ secrets.GH_CLIENT_SECRET }} \
             --wait
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig
