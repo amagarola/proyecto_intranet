@@ -16,9 +16,9 @@ jobs:
 
       - name: Set up Kubeconfig
         run: |
-          echo "$KUBECONFIG_DATA" | base64 -d > kubeconfig
+          echo "$KUBECONFIG" | base64 -d > kubeconfig
         env:
-          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG_B64 }}
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
 
       - name: Set KUBECONFIG env
         run: echo "KUBECONFIG=$(pwd)/kubeconfig" >> $GITHUB_ENV
@@ -36,3 +36,5 @@ jobs:
           helm upgrade --install nginx charts/nginx-ingress \
             --namespace ingress-nginx \
             --create-namespace
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig
