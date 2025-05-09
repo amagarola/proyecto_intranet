@@ -1,4 +1,5 @@
 name: Deploy Applications
+run-name: Deploying ${{ github.event.inputs.applications }}
 
 on:
   workflow_dispatch:
