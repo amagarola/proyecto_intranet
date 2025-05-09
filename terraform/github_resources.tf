@@ -34,10 +34,10 @@ resource "github_actions_variable" "target_port_https" {
   value         = var.target_port_https
 }
 
-resource "github_actions_variable" "domain" {
+resource "github_actions_variable" "domains" {
   repository    = "proyecto_intranet"
-  variable_name = "DOMAIN"
-  value         = var.domain
+  variable_name = "DOMAINS"
+  value         = join(",", var.domains)
 }
 
 resource "github_actions_secret" "k3s_private_key" {

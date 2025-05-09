@@ -30,38 +30,59 @@ jobs:
         run: ssh-keyscan -H ${{ secrets.PROXY_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
       - name: Update NGINX Configuration
+        env:
+          TARGET_IP: ${{ vars.MASTER_PRIVATE_IP }}
+          TARGET_PORT_HTTP: ${{ vars.TARGET_PORT_HTTP }}
+          TARGET_PORT_HTTPS: ${{ vars.TARGET_PORT_HTTPS }}
+          DOMAINS: ${{ vars.DOMAINS }}
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.PROXY_PUBLIC_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ vars.PROXY_PUBLIC_IP }} <<'EOF'
           set -euxo pipefail
 
-          # 3. Crear configuración de NGINX con autofirmado
-          cat <<EOT > /etc/nginx/sites-available/default
+          IFS=',' read -r -a DOMAINS_ARRAY <<< "$DOMAINS"
+
+          cat <<EOT | sudo tee /etc/nginx/sites-available/default
           server {
               listen 80;
-              server_name ${{ vars.DOMAIN }};
+              server_name ${DOMAINS_ARRAY[*]};
 
               location / {
-                  proxy_pass http://${{ vars.TARGET_IP }}:${{ vars.TARGET_PORT_HTTP }};
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_pass http://$TARGET_IP:$TARGET_PORT_HTTP;
+                  proxy_set_header Host \$host;
+                  proxy_set_header X-Real-IP \$remote_addr;
               }
           }
-
           server {
               listen 443 ssl;
-              server_name ${{ vars.DOMAIN }};
+              server_name ${DOMAINS_ARRAY[0]} ${DOMAINS_ARRAY[2]} ${DOMAINS_ARRAY[3]} ${DOMAINS_ARRAY[4]};
 
               ssl_certificate /etc/nginx/certs/adrianmagarola.crt;
               ssl_certificate_key /etc/nginx/certs/adrianmagarola.key;
 
               location / {
-                  proxy_pass https://${{ vars.TARGET_IP }}:${{ vars.TARGET_PORT_HTTPS }};
+                  proxy_pass https://$TARGET_IP:$TARGET_PORT_HTTPS;
                   proxy_ssl_verify off;
                   proxy_ssl_session_reuse off;
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header Host \$host;
+                  proxy_set_header X-Real-IP \$remote_addr;
+              }
+          }
+          server {
+              listen 443 ssl;
+              server_name ${DOMAINS_ARRAY[1]};
+
+              ssl_certificate /etc/nginx/certs/adrianmagarola.crt;
+              ssl_certificate_key /etc/nginx/certs/adrianmagarola.key;
+
+              location / {
+                  proxy_pass https://$TARGET_IP:$TARGET_PORT_HTTPS;
+                  proxy_ssl_verify off;
+                  proxy_ssl_session_reuse off;
+                  proxy_set_header Host \$host;
+                  proxy_set_header X-Real-IP \$remote_addr;
               }
           }
           EOT
-          systemctl reload nginx
+
+          sudo systemctl reload nginx
           EOF
