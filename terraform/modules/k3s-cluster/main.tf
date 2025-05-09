@@ -123,41 +123,28 @@ resource "aws_instance" "master" {
       # ------------------------------------------------------------------
       # Desplegar nginx-ingress
       # ------------------------------------------------------------------
-      "helm upgrade --install nginx nginx-stable/ingress-nginx \\",
-      "  --namespace ingress-nginx \\",
-      "  --create-namespace \\",
-      "  --version 4.12.1 \\",
-      "  --set controller.service.type=NodePort \\",
-      "  --set controller.service.nodePorts.http=30080 \\",
-      "  --set controller.service.nodePorts.https=30443 \\",
-      "  --set controller.nodeSelector.'node-role\\.k3s\\.io/master'=true \\",
-      "  --set controller.ingressClassResource.name=nginx \\",
-      "  --set controller.ingressClassResource.controllerValue=k8s.io/ingress-nginx \\",
-      "  --set controller.ingressClassByName=true \\",
-      "  --set controller.admissionWebhooks.enabled=false \\",
-      "  --set controller.admissionWebhooks.patch.enabled=false",
+      # "helm upgrade --install nginx nginx-stable/ingress-nginx \\",
+      # "  --namespace ingress-nginx \\",
+      # "  --create-namespace \\",
+      # "  --version 4.12.1 \\",
+      # "  --set controller.service.type=NodePort \\",
+      # "  --set controller.service.nodePorts.http=30080 \\",
+      # "  --set controller.service.nodePorts.https=30443 \\",
+      # "  --set controller.nodeSelector.node-role.k3s.io/master=\"true\" \\",
+      # "  --set controller.ingressClassResource.name=nginx \\",
+      # "  --set controller.ingressClassResource.controllerValue=k8s.io/ingress-nginx \\",
+      # "  --set controller.ingressClassByName=true \\",
+      # "  --set controller.admissionWebhooks.enabled=false \\",
+      # "  --set controller.admissionWebhooks.patch.enabled=false"
 
       # ------------------------------------------------------------------
       # Desplegar letsencrypt-issuer
       # ------------------------------------------------------------------
-      <<-EOT
-      cat <<'MANIFEST' | kubectl apply -f -
-      apiVersion: cert-manager.io/v1
-      kind: ClusterIssuer
-      metadata:
-        name: letsencrypt
-      spec:
-        acme:
-          server: https://acme-v02.api.letsencrypt.org/directory
-          email: adrianmagarola@gmail.com
-          privateKeySecretRef:
-            name: letsencrypt-private-key
-          solvers:
-          - http01:
-              ingress:
-                class: nginx
-      MANIFEST
-      EOT
+      # "helm upgrade --install letsencrypt-issuer ../charts/letsencrypt-issuer \\",
+      # "  --namespace cert-manager \\",
+      # "  --create-namespace \\",
+      # "  --set email=adrianmagarola@gmail.com \\",
+      # "  --set ingressClass=nginx",
     ]
     connection {
       type        = "ssh"
