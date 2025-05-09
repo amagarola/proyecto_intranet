@@ -5,8 +5,8 @@ module "k3s_cluster" {
 }
 
 module "proxy" {
-  source               = "./modules/proxy"
-  depends_on           = [module.helm_releases.argocd]
+  source = "./modules/proxy"
+  # depends_on           = [module.helm_releases.argocd] # Comentado o eliminado
   ami_id               = "ami-0e449927258d45bc4"
   instance_type        = var.instance_type
   subnet_id            = var.subnet_id

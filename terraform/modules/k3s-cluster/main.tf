@@ -30,6 +30,7 @@ resource "aws_instance" "master" {
 
   provisioner "remote-exec" {
     inline = [
+      "set -x", # Add this line for verbose output
       # ------------------------------------------------------------------
       # 1) Actualizar paquetes y utilidades básicas
       # ------------------------------------------------------------------
@@ -129,7 +130,7 @@ resource "aws_instance" "master" {
       "  --set controller.service.type=NodePort \\",
       "  --set controller.service.nodePorts.http=30080 \\",
       "  --set controller.service.nodePorts.https=30443 \\",
-      "  --set controller.nodeSelector.node-role.k3s.io/master=true \\",
+      "  --set controller.nodeSelector.'node-role\\.k3s\\.io/master'=true \\",
       "  --set controller.ingressClassResource.name=nginx \\",
       "  --set controller.ingressClassResource.controllerValue=k8s.io/ingress-nginx \\",
       "  --set controller.ingressClassByName=true \\",
@@ -139,7 +140,24 @@ resource "aws_instance" "master" {
       # ------------------------------------------------------------------
       # Desplegar letsencrypt-issuer
       # ------------------------------------------------------------------
-      "kubectl apply -f ${path.module}/charts/letsencrypt-issuer",
+      <<-EOT
+      cat <<'MANIFEST' | kubectl apply -f -
+      apiVersion: cert-manager.io/v1
+      kind: ClusterIssuer
+      metadata:
+        name: letsencrypt
+      spec:
+        acme:
+          server: https://acme-v02.api.letsencrypt.org/directory
+          email: adrianmagarola@gmail.com
+          privateKeySecretRef:
+            name: letsencrypt-private-key
+          solvers:
+          - http01:
+              ingress:
+                class: nginx
+      MANIFEST
+      EOT
     ]
     connection {
       type        = "ssh"

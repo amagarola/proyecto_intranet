@@ -65,6 +65,30 @@ variable "github_client_secret" {
   sensitive   = true
 }
 
+variable "target_port_http" {
+  description = "Target HTTP port for the proxy to forward to (e.g., k3s ingress NodePort)"
+  type        = number
+  default     = 30080
+}
+
+variable "target_port_https" {
+  description = "Target HTTPS port for the proxy to forward to (e.g., k3s ingress NodePort)"
+  type        = number
+  default     = 30443
+}
+
+variable "master_private_ip" {
+  description = "Private IP address of the K3s master node"
+  type        = string
+  default     = ""
+}
+
+variable "proxy_public_ip" {
+  description = "Public IP address of the proxy node"
+  type        = string
+  default     = ""
+}
+
 variable "aws_access_key" {
   description = "Clave de acceso AWS (Access Key ID)"
   type        = string
