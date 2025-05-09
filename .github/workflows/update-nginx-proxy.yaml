@@ -38,10 +38,10 @@ jobs:
           cat <<EOT > /etc/nginx/sites-available/default
           server {
               listen 80;
-              server_name ${{ secrets.DOMAIN }};
+              server_name ${{ vars.DOMAIN }};
 
               location / {
-                  proxy_pass http://${{ secrets.TARGET_IP }}:${{ secrets.TARGET_PORT_HTTP }};
+                  proxy_pass http://${{ vars.TARGET_IP }}:${{ vars.TARGET_PORT_HTTP }};
                   proxy_set_header Host $host;
                   proxy_set_header X-Real-IP $remote_addr;
               }
@@ -49,13 +49,13 @@ jobs:
 
           server {
               listen 443 ssl;
-              server_name ${{ secrets.DOMAIN }};
+              server_name ${{ vars.DOMAIN }};
 
               ssl_certificate /etc/nginx/certs/adrianmagarola.crt;
               ssl_certificate_key /etc/nginx/certs/adrianmagarola.key;
 
               location / {
-                  proxy_pass https://${{ secrets.TARGET_IP }}:${{ secrets.TARGET_PORT_HTTPS }};
+                  proxy_pass https://${{ vars.TARGET_IP }}:${{ vars.TARGET_PORT_HTTPS }};
                   proxy_ssl_verify off;
                   proxy_ssl_session_reuse off;
                   proxy_set_header Host $host;
