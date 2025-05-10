@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ include "intranet.fullname" . }}"
+  labels:
+    {{- include "intranet.labels" . | nindent 4 }}
+spec:
+  nodeSelector:
+    node-role.k3s.io/master: "true"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "{{ include "intranet.name" . }}"
+  template:
+    metadata:
+      labels:
+        app: "{{ include "intranet.name" . }}"
+    spec:
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ include "intranet.serviceAccountName" . }}
+      {{- end }}
+      {{- if .Values.podSecurityContext.enabled }}
+      securityContext:
+        {{- .Values.podSecurityContext | toYaml | nindent 8 | replace "enabled: true" "" | trim }}
+      {{- end }}
+      containers:
+        - name: intranet-app
+          image: "{{ .Values.intranet.image.repository }}:{{ .Values.intranet.image.tag }}"
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext:
+            {{- .Values.containerSecurityContext | toYaml | nindent 12 | replace "enabled: true" "" | trim }}
+          {{- end }}
+          {{- if .Values.intranet.resources }}
+          resources:
+            {{- toYaml .Values.intranet.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http # Named port for probes
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: WORDPRESS_USERNAME
+              value: "{{ .Values.intranet.username }}"
+            - name: WORDPRESS_PASSWORD
+              value: "{{ .Values.intranet.password }}"
+            - name: WORDPRESS_EMAIL
+              value: "{{ .Values.intranet.email }}"
+            - name: WORDPRESS_BLOG_NAME
+              value: "{{ .Values.intranet.siteName }}"
+            {{- if .Values.intranet.externalDatabase.enabled }}
+            - name: WORDPRESS_DATABASE_HOST
+              value: "{{ .Values.intranet.externalDatabase.host }}"
+            - name: WORDPRESS_DATABASE_PORT_NUMBER # Bitnami WordPress uses this for port
+              value: "{{ .Values.intranet.externalDatabase.port | toString }}"
+            - name: WORDPRESS_DATABASE_NAME
+              value: "{{ .Values.intranet.externalDatabase.name }}"
+            - name: WORDPRESS_DATABASE_USER
+              value: "{{ .Values.intranet.externalDatabase.user }}"
+            - name: WORDPRESS_DATABASE_PASSWORD
+              {{- if .Values.intranet.externalDatabase.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.intranet.externalDatabase.existingSecret }}
+                  key: {{ .Values.intranet.externalDatabase.existingSecretPasswordKey }}
+              {{- else }}
+              value: "{{ .Values.intranet.externalDatabase.password }}"
+              {{- end }}
+            {{- else if .Values.mariadb.enabled }} # Use MariaDB subchart
+            - name: WORDPRESS_DATABASE_HOST
+              value: "{{ .Release.Name }}-mariadb"
+            - name: WORDPRESS_DATABASE_PORT_NUMBER # Default for MariaDB is 3306
+              value: "3306"
+            - name: WORDPRESS_DATABASE_NAME
+              value: "{{ .Values.mariadb.auth.database }}"
+            - name: WORDPRESS_DATABASE_USER
+              value: "{{ .Values.mariadb.auth.username }}"
+            - name: WORDPRESS_DATABASE_PASSWORD
+              value: "{{ .Values.mariadb.auth.password }}"
+            {{- end }}
+            # Add extra environment variables
+            {{- if .Values.intranet.extraEnvVars }}
+            {{- toYaml .Values.intranet.extraEnvVars | nindent 12 }}
+            {{- end }}
+          {{- if .Values.intranet.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.intranet.livenessProbe.httpGet.path }}
+              port: {{ .Values.intranet.livenessProbe.httpGet.port }}
+            initialDelaySeconds: {{ .Values.intranet.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.intranet.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.intranet.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.intranet.livenessProbe.failureThreshold }}
+            successThreshold: {{ .Values.intranet.livenessProbe.successThreshold }}
+          {{- end }}
+          {{- if .Values.intranet.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.intranet.readinessProbe.httpGet.path }}
+              port: {{ .Values.intranet.readinessProbe.httpGet.port }}
+            initialDelaySeconds: {{ .Values.intranet.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.intranet.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.intranet.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.intranet.readinessProbe.failureThreshold }}
+            successThreshold: {{ .Values.intranet.readinessProbe.successThreshold }}
+          {{- end }}
+          volumeMounts:
+            - mountPath: /bitnami/wordpress
+              name: intranet-storage
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/bash
+                  - -c
+                  - |
+                    sleep 60
+                    for plugin in $(echo "{{ join " " .Values.intranet.plugins }}"); do
+                      wp plugin install $plugin --activate --allow-root
+                    done
+      volumes:
+        - name: intranet-storage
+          persistentVolumeClaim:
+            claimName: "{{ include "intranet.fullname" . }}-pvc"

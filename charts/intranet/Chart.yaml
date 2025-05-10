@@ -1,0 +1,7 @@
+apiVersion: v2
+name: intranet
+version: 0.1.0
+dependencies:
+  - name: mariadb
+    version: ~14.0.0
+    repository: https://charts.bitnami.com/bitnami
