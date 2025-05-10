@@ -41,3 +41,27 @@ resource "aws_iam_instance_profile" "ec2_ssm_profile" {
   name = "ec2-ssm-profile"
   role = aws_iam_role.ec2_ssm_role.name
 }
+
+resource "aws_s3_bucket" "tfstate" {
+  bucket        = "proyecto-intranet-tfstate"
+  force_destroy = true
+  acl           = "private"
+
+  versioning {
+    enabled = true
+  }
+
+  tags = {
+    Name        = "Terraform State Bucket"
+    Environment = "dev"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "tfstate" {
+  bucket = aws_s3_bucket.tfstate.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
