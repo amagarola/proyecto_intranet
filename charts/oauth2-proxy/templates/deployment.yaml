@@ -24,7 +24,7 @@ spec:
       nodeSelector:
         {{ toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .serviceAccount }}
+      {{- with .serviceAccount | default $.Values.serviceAccount }}
       {{- if .name }}
       serviceAccountName: {{ .name | default (printf "%s-oauth2-proxy" (include "oauth2-proxy.fullname" $)) }}
       {{- end }}
