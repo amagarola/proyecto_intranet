@@ -15,11 +15,11 @@ jobs:
 
       - name: Add Proxy IP to known_hosts
         run: |
-          if [ -z "${{ secrets.PROXY_PUBLIC_IP }}" ]; then
+          if [ -z "${{ vars.PROXY_PUBLIC_IP }}" ]; then
             echo "Error: PROXY_PUBLIC_IP is not set." >&2
             exit 1
           fi
-          ssh-keyscan -H ${{ secrets.PROXY_PUBLIC_IP }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ vars.PROXY_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
       - name: Update NGINX Configuration
         env:
