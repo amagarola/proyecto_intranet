@@ -1,0 +1,40 @@
+name: 📦🚀 Deploy OAuth2 Proxy
+run-name: Deploy OAuth2 Proxy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-oauth2-proxy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Kubeconfig
+        run: |
+          echo "$KUBECONFIG" > kubeconfig
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+
+      - name: Set KUBECONFIG env
+        run: echo "KUBECONFIG=$(pwd)/kubeconfig" >> $GITHUB_ENV
+
+      - name: Setup Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Deploy OAuth2 Proxy with Helm
+        run: |
+          echo "Deploying OAuth2 Proxy with Helm..."
+          helm upgrade --install oauth2-proxy ./charts/oauth2-proxy \
+            --namespace argocd \
+            --create-namespace \
+            -f ./charts/oauth2-proxy/values.yaml \
+            --set defaultCredentials.clientId=${{ secrets.OAUTH2_CLIENT_ID }} \
+            --set defaultCredentials.clientSecret=${{ secrets.OAUTH2_CLIENT_SECRET }} \
+            --wait
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig
