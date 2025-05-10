@@ -1,4 +1,4 @@
-name: 🚀🛑 ${{ github.event.inputs.ACTION == 'start' && 'Iniciar' || 'Parar' }} Todas las Instancias EC2
+name: ${{ format('🚀🛑 {0} Todas las Instancias EC2', github.event.inputs.ACTION == 'start' && 'Iniciar' || 'Parar') }}
 run-name: ${{ github.event.inputs.ACTION == 'start' && 'Iniciar Todas las Instancias EC2' || 'Parar Todas las Instancias EC2' }}
 
 on:
