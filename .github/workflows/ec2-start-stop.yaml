@@ -1,0 +1,39 @@
+name: Iniciar/Detener Todas las Instancias EC2
+
+on:
+  workflow_dispatch:
+    inputs:
+      ACTION:
+        description: 'Acción a realizar (iniciar o detener)'
+        required: true
+        type: choice
+        options:
+          - start
+          - stop
+
+jobs:
+  ec2-control:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configurar credenciales de AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Iniciar o detener todas las instancias EC2
+        run: |
+          INSTANCE_IDS=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].InstanceId' --output text)
+          if [ -z "$INSTANCE_IDS" ]; then
+            echo "No se encontraron instancias EC2."
+            exit 0
+          fi
+          if [ "${{ github.event.inputs.ACTION }}" = "start" ]; then
+            aws ec2 start-instances --instance-ids $INSTANCE_IDS
+          elif [ "${{ github.event.inputs.ACTION }}" = "stop" ]; then
+            aws ec2 stop-instances --instance-ids $INSTANCE_IDS
+          else
+            echo "Acción inválida: ${{ github.event.inputs.ACTION }}" >&2
+            exit 1
+          fi
