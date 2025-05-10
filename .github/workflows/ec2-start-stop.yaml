@@ -1,5 +1,5 @@
 name: 🚀🛑 Iniciar/Detener Todas las Instancias EC2
-run-name: ${{ format('🚀🛑 {0} Todas las Instancias EC2', github.event.inputs.ACTION == 'start' && 'Iniciar' || 'Parar') }}
+run-name: ${{ format('{0} Todas las Instancias EC2', github.event.inputs.ACTION == 'start' && '🚀 Iniciar' || '🛑 Parar') }}
 
 on:
   workflow_dispatch:
