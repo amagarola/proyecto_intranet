@@ -54,11 +54,12 @@ oauth2proxyInstances:
     # Configuración de Ingress para exponer este servicio oauth2-proxy
     ingress:
       enabled: true
-      host: "auth-argocd.adrianmagarola.click" # Host para el servicio oauth2-proxy en sí
+      host: "argocd.adrianmagarola.click" # Host para el servicio oauth2-proxy en sí
       # className: "nginx" # Opcional: especifica la clase de Ingress
       annotations: # Opcional: anotaciones específicas para este Ingress
         cert-manager.io/cluster-issuer: "letsencrypt" # Ejemplo
         nginx.ingress.kubernetes.io/ssl-redirect: "true"
+        nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
       tls:
         enabled: true
         secretName: "oauth2-proxy-argocd-tls" # Secret de K8s para el certificado TLS de auth-argocd...
@@ -76,7 +77,7 @@ oauth2proxyInstances:
     redirectURL: "https://auth-grafana.adrianmagarola.click/oauth2/callback"
     ingress:
       enabled: true
-      host: "auth-grafana.adrianmagarola.click"
+      host: "grafana.adrianmagarola.click"
       annotations:
         cert-manager.io/cluster-issuer: "letsencrypt"
         nginx.ingress.kubernetes.io/ssl-redirect: "true"
