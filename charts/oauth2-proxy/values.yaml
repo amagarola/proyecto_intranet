@@ -49,7 +49,7 @@ oauth2proxyInstances:
 
     # Configuración del upstream (la aplicación protegida)
     upstream: "http://argocd-server.argocd.svc.cluster.local:80"
-    redirectURL: "https://auth-argocd.adrianmagarola.click/oauth2/callback" # URL de callback de OAuth para esta instancia
+    redirectURL: "https://argocd.adrianmagarola.click/oauth2/callback" # URL de callback de OAuth para esta instancia
 
     # Configuración de Ingress para exponer este servicio oauth2-proxy
     ingress:
@@ -74,7 +74,7 @@ oauth2proxyInstances:
     credentials:
       cookieSecret: ""
     upstream: "http://grafana.monitoring.svc.cluster.local:3000"
-    redirectURL: "https://auth-grafana.adrianmagarola.click/oauth2/callback"
+    redirectURL: "https://grafana.adrianmagarola.click/oauth2/callback"
     ingress:
       enabled: true
       host: "grafana.adrianmagarola.click"
@@ -84,6 +84,40 @@ oauth2proxyInstances:
       tls:
         enabled: true
         secretName: "grafana-tls"
+
+  - name: "intranet" # Nombre único para esta instancia
+    namespace: "intranet" # Cambia esto al namespace donde corre tu sitio principal si es diferente
+    credentials:
+      cookieSecret: "" # Se autogenerará o puedes especificar uno.
+      # Si usas las mismas credenciales de GitHub que para las otras apps, no necesitas clientId/clientSecret aquí.
+      # Si son diferentes, especifícalas:
+      # clientId: "YOUR_MAIN_SITE_CLIENT_ID"
+      # clientSecret: "YOUR_MAIN_SITE_CLIENT_SECRET"
+    upstream: "http://main-website-service.default.svc.cluster.local:80" # ¡IMPORTANTE! Cambia esto al servicio y puerto correctos de tu sitio principal.
+    redirectURL: "https://adrianmagarola.click/oauth2/callback" # URL de callback para el sitio principal
+    ingress:
+      enabled: true
+      host: "adrianmagarola.click" # Host para el sitio principal
+      # className: "nginx" # Si es necesario
+      annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt"
+        nginx.ingress.kubernetes.io/ssl-redirect: "true"
+        # Aquí podrías necesitar anotaciones adicionales específicas para tu sitio principal
+        # Por ejemplo, si el proxy está en un path diferente o si el sitio principal necesita headers específicos.
+        # Para proteger todo el sitio, el path del ingress para el proxy debería ser /oauth2
+        # y el ingress de tu aplicación principal (adrianmagarola.click) debería tener las anotaciones de auth.
+        # Este ejemplo asume que el proxy maneja el host principal directamente.
+        # Si tu aplicación principal tiene su propio Ingress, la configuración es diferente.
+        # Este Ingress es para el oauth2-proxy en sí, si quieres que sea accesible directamente.
+        # Lo más común es que el Ingress de tu aplicación (adrianmagarola.click)
+        # use las anotaciones de NGINX Ingress para apuntar a ESTE oauth2-proxy para la autenticación.
+        # Ejemplo de anotaciones para el Ingress de tu aplicación principal:
+        # nginx.ingress.kubernetes.io/auth-url: "https://adrianmagarola.click/oauth2/auth" (o el path donde expongas el auth de esta instancia)
+        # nginx.ingress.kubernetes.io/auth-signin: "https://adrianmagarola.click/oauth2/start?rd=$scheme://$host$request_uri"
+
+      tls:
+        enabled: true
+        secretName: "intranet-tls" # Secret de Kubernetes para el certificado TLS de adrianmagarola.click
 
 # Configuración de recursos para los pods (opcional, puede ser sobreescrito por instancia)
 # resources: {}
