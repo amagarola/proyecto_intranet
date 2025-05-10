@@ -12,8 +12,8 @@ replicaCount: 1
 defaultCredentials:
   # Estos valores se usarán para crear un Secret de Kubernetes si no se especifica `existingSecretName`
   # Los valores aquí NO deben estar codificados en Base64. El template se encargará de eso.
-  clientId: "DEFAULT_GITHUB_CLIENT_ID_CHANGE_ME"
-  clientSecret: "DEFAULT_GITHUB_CLIENT_SECRET_CHANGE_ME"
+  clientId: "{{ env \"OAUTH2_CLIENT_ID\" }}" # Apuntando al secreto de GitHub
+  clientSecret: "{{ env \"OAUTH2_CLIENT_SECRET\" }}" # Apuntando al secreto de GitHub
   # cookieSecret DEBE ser único por instancia para seguridad. No hay default global para cookieSecret.
   # existingSecretName: "" # Descomenta y establece si quieres usar un Secret de K8s preexistente globalmente para clientId/clientSecret
 
@@ -44,7 +44,7 @@ oauth2proxyInstances:
     credentials:
       # clientId: "OVERRIDE_CLIENT_ID_FOR_ARGOCD" # Opcional, si es diferente del default
       # clientSecret: "OVERRIDE_CLIENT_SECRET_FOR_ARGOCD" # Opcional
-      cookieSecret: "GENERATE_A_UNIQUE_32_BYTE_STRING_FOR_ARGOCD_COOKIE_SECRET" # ¡OBLIGATORIO Y ÚNICO POR INSTANCIA! (No codificado en Base64 aquí)
+      cookieSecret: ""
       # existingSecretName: "argocd-oauth-credentials" # Opcional: si las credenciales (clientId, clientSecret, cookieSecret) están en un Secret de K8s existente
 
     # Configuración del upstream (la aplicación protegida)
@@ -62,7 +62,7 @@ oauth2proxyInstances:
         nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
       tls:
         enabled: true
-        secretName: "oauth2-proxy-argocd-tls" # Secret de K8s para el certificado TLS de auth-argocd...
+        secretName: "argocd-tls" # Secret de K8s para el certificado TLS de auth-argocd...
 
     # Argumentos adicionales o para sobreescribir los defaults para esta instancia
     # args:
@@ -72,8 +72,8 @@ oauth2proxyInstances:
   - name: "grafana"
     namespace: "monitoring" # Asumiendo que grafana está en el namespace 'monitoring'
     credentials:
-      cookieSecret: "GENERATE_A_UNIQUE_32_BYTE_STRING_FOR_GRAFANA_COOKIE_SECRET" # ¡OBLIGATORIO Y ÚNICO!
-    upstream: "http://grafana.monitoring.svc.cluster.local:3000" # Ajusta al nombre de tu servicio de Grafana
+      cookieSecret: ""
+    upstream: "http://grafana.monitoring.svc.cluster.local:3000"
     redirectURL: "https://auth-grafana.adrianmagarola.click/oauth2/callback"
     ingress:
       enabled: true
@@ -83,7 +83,7 @@ oauth2proxyInstances:
         nginx.ingress.kubernetes.io/ssl-redirect: "true"
       tls:
         enabled: true
-        secretName: "oauth2-proxy-grafana-tls"
+        secretName: "grafana-tls"
 
 # Configuración de recursos para los pods (opcional, puede ser sobreescrito por instancia)
 # resources: {}
