@@ -1,9 +1,6 @@
 name: Update NGINX Configuration
 
 on:
-  push:
-    paths:
-      - 'terraform/modules/proxy/**'
   workflow_dispatch:
 
 jobs:
