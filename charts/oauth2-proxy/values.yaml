@@ -130,7 +130,7 @@ oauth2proxyInstances:
 
 # Node selector global (opcional, puede ser sobreescrito por instancia)
 # nodeSelector:
-#   node-role.k3s.io/master: "true" # Ejemplo del chart original, considera si es necesario
+#   node-role.k3s.io/worker: "true" # Ejemplo del chart original, considera si es necesario
 
 # serviceAccount:
   # create: true

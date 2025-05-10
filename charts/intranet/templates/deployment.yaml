@@ -6,7 +6,7 @@ metadata:
     {{- include "intranet.labels" . | nindent 4 }}
 spec:
   nodeSelector:
-    node-role.k3s.io/master: "true"
+    node-role.k3s.io/worker: "true"
   replicas: 1
   selector:
     matchLabels:
