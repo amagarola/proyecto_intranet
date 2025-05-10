@@ -31,29 +31,30 @@ spec:
         - name: oauth2-proxy
           image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag }}"
           imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          {{- $instanceArgs := .args | default dict -}}
           args:
             - --http-address=0.0.0.0:4180
             - --upstream={{ .upstream }}
             - --redirect-url={{ .redirectURL }}
             # Default args from global, can be overridden by instance specific args
-            - --provider={{ .args.provider | default $.Values.defaultArgs.provider }}
-            {{- range .args.emailDomains | default $.Values.defaultArgs.emailDomains }}
+            - --provider={{ $instanceArgs.provider | default $.Values.defaultArgs.provider }}
+            {{- range $instanceArgs.emailDomains | default $.Values.defaultArgs.emailDomains }}
             - --email-domain={{ . }}
             {{- end }}
-            - --cookie-secure={{ .args.cookieSecure | default $.Values.defaultArgs.cookieSecure | quote }}
-            - --cookie-http-only={{ .args.cookieHttpOnly | default $.Values.defaultArgs.cookieHttpOnly | quote }}
-            - --cookie-expire={{ .args.cookieExpire | default $.Values.defaultArgs.cookieExpire | quote }}
-            - --cookie-refresh={{ .args.cookieRefresh | default $.Values.defaultArgs.cookieRefresh | quote }}
-            {{- if .args.cookieDomain | default $.Values.defaultArgs.cookieDomain }}
-            - --cookie-domain={{ .args.cookieDomain | default $.Values.defaultArgs.cookieDomain }}
+            - --cookie-secure={{ $instanceArgs.cookieSecure | default $.Values.defaultArgs.cookieSecure | quote }}
+            - --cookie-http-only={{ $instanceArgs.cookieHttpOnly | default $.Values.defaultArgs.cookieHttpOnly | quote }}
+            - --cookie-expire={{ $instanceArgs.cookieExpire | default $.Values.defaultArgs.cookieExpire | quote }}
+            - --cookie-refresh={{ $instanceArgs.cookieRefresh | default $.Values.defaultArgs.cookieRefresh | quote }}
+            {{- if $instanceArgs.cookieDomain | default $.Values.defaultArgs.cookieDomain }}
+            - --cookie-domain={{ $instanceArgs.cookieDomain | default $.Values.defaultArgs.cookieDomain }}
             {{- end }}
-            - --set-xauthrequest={{ .args.setXAuthRequest | default $.Values.defaultArgs.setXAuthRequest | quote }}
-            - --pass-access-token={{ .args.passAccessToken | default $.Values.defaultArgs.passAccessToken | quote }}
-            - --pass-authorization-header={{ .args.passAuthorizationHeader | default $.Values.defaultArgs.passAuthorizationHeader | quote }}
-            {{- if .args.sslInsecureSkipVerify | default $.Values.defaultArgs.sslInsecureSkipVerify }}
-            - --ssl-insecure-skip-verify={{ .args.sslInsecureSkipVerify | default $.Values.defaultArgs.sslInsecureSkipVerify | quote }}
+            - --set-xauthrequest={{ $instanceArgs.setXAuthRequest | default $.Values.defaultArgs.setXAuthRequest | quote }}
+            - --pass-access-token={{ $instanceArgs.passAccessToken | default $.Values.defaultArgs.passAccessToken | quote }}
+            - --pass-authorization-header={{ $instanceArgs.passAuthorizationHeader | default $.Values.defaultArgs.passAuthorizationHeader | quote }}
+            {{- if $instanceArgs.sslInsecureSkipVerify | default $.Values.defaultArgs.sslInsecureSkipVerify }}
+            - --ssl-insecure-skip-verify={{ $instanceArgs.sslInsecureSkipVerify | default $.Values.defaultArgs.sslInsecureSkipVerify | quote }}
             {{- end }}
-            {{- range .args.whitelistDomains | default $.Values.defaultArgs.whitelistDomains }}
+            {{- range $instanceArgs.whitelistDomains | default $.Values.defaultArgs.whitelistDomains }}
             - --whitelist-domain={{ . }}
             {{- end }}
             # Instance specific extra args
