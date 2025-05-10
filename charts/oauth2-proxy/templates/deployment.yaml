@@ -36,9 +36,9 @@ spec:
           {{- $instanceArgs := .args | default dict -}}
           args:
             - --http-address=0.0.0.0:4180
-            - --upstream={{ .upstream }}
-            - --redirect-url={{ .redirectURL }}
-            - --provider={{ $instanceArgs.provider | default $.Values.defaultArgs.provider }}
+            - --upstream={{ .upstream | quote }}
+            - --redirect-url={{ .redirectURL | quote }}
+            - --provider={{ $instanceArgs.provider | default $.Values.defaultArgs.provider | quote }}
             {{- range $instanceArgs.emailDomains | default $.Values.defaultArgs.emailDomains }}
             - --email-domain={{ . }}
             {{- end }}
@@ -47,7 +47,7 @@ spec:
             - --cookie-expire={{ $instanceArgs.cookieExpire | default $.Values.defaultArgs.cookieExpire | quote }}
             - --cookie-refresh={{ $instanceArgs.cookieRefresh | default $.Values.defaultArgs.cookieRefresh | quote }}
             {{- if $instanceArgs.cookieDomain | default $.Values.defaultArgs.cookieDomain }}
-            - --cookie-domain={{ $instanceArgs.cookieDomain | default $.Values.defaultArgs.cookieDomain }}
+            - --cookie-domain={{ $instanceArgs.cookieDomain | default $.Values.defaultArgs.cookieDomain | quote }}
             {{- end }}
             - --set-xauthrequest={{ $instanceArgs.setXAuthRequest | default $.Values.defaultArgs.setXAuthRequest | quote }}
             - --pass-access-token={{ $instanceArgs.passAccessToken | default $.Values.defaultArgs.passAccessToken | quote }}
