@@ -22,10 +22,12 @@ spec:
     spec:
       {{- with .nodeSelector | default $.Values.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{ toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .serviceAccount | default $.Values.serviceAccount }}
+      {{- with .serviceAccount }}
+      {{- if .name }}
       serviceAccountName: {{ .name | default (printf "%s-oauth2-proxy" (include "oauth2-proxy.fullname" $)) }}
+      {{- end }}
       {{- end }}
       containers:
         - name: oauth2-proxy
