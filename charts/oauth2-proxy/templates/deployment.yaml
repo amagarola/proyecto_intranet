@@ -37,24 +37,24 @@ spec:
           {{- $instanceArgs := .args | default dict }}
           args:
             - --http-address=0.0.0.0:4180
-            - --upstream={{ .upstream | quote }}
-            - --redirect-url={{ .redirectURL | quote }}
-            - --provider={{ $instanceArgs.provider | default $.Values.defaultArgs.provider | quote }}
+            - --upstream={{ .upstream }}
+            - --redirect-url={{ .redirectURL }}
+            - --provider={{ $instanceArgs.provider | default $.Values.defaultArgs.provider }}
             {{- range $instanceArgs.emailDomains | default $.Values.defaultArgs.emailDomains }}
             - --email-domain={{ . }}
             {{- end }}
-            - --cookie-secure={{ $instanceArgs.cookieSecure | default $.Values.defaultArgs.cookieSecure | quote }}
-            - --cookie-http-only={{ $instanceArgs.cookieHttpOnly | default $.Values.defaultArgs.cookieHttpOnly | quote }}
-            - --cookie-expire={{ $instanceArgs.cookieExpire | default $.Values.defaultArgs.cookieExpire | quote }}
-            - --cookie-refresh={{ $instanceArgs.cookieRefresh | default $.Values.defaultArgs.cookieRefresh | quote }}
+            - --cookie-secure={{ $instanceArgs.cookieSecure | default $.Values.defaultArgs.cookieSecure }}
+            - --cookie-http-only={{ $instanceArgs.cookieHttpOnly | default $.Values.defaultArgs.cookieHttpOnly }}
+            - --cookie-expire={{ $instanceArgs.cookieExpire | default $.Values.defaultArgs.cookieExpire }}
+            - --cookie-refresh={{ $instanceArgs.cookieRefresh | default $.Values.defaultArgs.cookieRefresh }}
             {{- if $instanceArgs.cookieDomain | default $.Values.defaultArgs.cookieDomain }}
-            - --cookie-domain={{ $instanceArgs.cookieDomain | default $.Values.defaultArgs.cookieDomain | quote }}
+            - --cookie-domain={{ $instanceArgs.cookieDomain | default $.Values.defaultArgs.cookieDomain }}
             {{- end }}
-            - --set-xauthrequest={{ $instanceArgs.setXAuthRequest | default $.Values.defaultArgs.setXAuthRequest | quote }}
-            - --pass-access-token={{ $instanceArgs.passAccessToken | default $.Values.defaultArgs.passAccessToken | quote }}
-            - --pass-authorization-header={{ $instanceArgs.passAuthorizationHeader | default $.Values.defaultArgs.passAuthorizationHeader | quote }}
+            - --set-xauthrequest={{ $instanceArgs.setXAuthRequest | default $.Values.defaultArgs.setXAuthRequest }}
+            - --pass-access-token={{ $instanceArgs.passAccessToken | default $.Values.defaultArgs.passAccessToken }}
+            - --pass-authorization-header={{ $instanceArgs.passAuthorizationHeader | default $.Values.defaultArgs.passAuthorizationHeader }}
             {{- if $instanceArgs.sslInsecureSkipVerify | default $.Values.defaultArgs.sslInsecureSkipVerify }}
-            - --ssl-insecure-skip-verify={{ $instanceArgs.sslInsecureSkipVerify | default $.Values.defaultArgs.sslInsecureSkipVerify | quote }}
+            - --ssl-insecure-skip-verify={{ $instanceArgs.sslInsecureSkipVerify | default $.Values.defaultArgs.sslInsecureSkipVerify }}
             {{- end }}
             {{- range $instanceArgs.whitelistDomains | default $.Values.defaultArgs.whitelistDomains }}
             - --whitelist-domain={{ . }}
