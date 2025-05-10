@@ -1,27 +1,39 @@
+{{- range .Values.oauth2proxyInstances }}
+{{- if .ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: oauth2-proxy-ingress
-  namespace: argocd
+  name: {{ .name }}-oauth2-proxy
+  namespace: {{ .namespace }}
+  labels:
+    app.kubernetes.io/name: oauth2-proxy
+    app.kubernetes.io/instance: {{ .name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+  {{- with .ingress.annotations }}
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-    cert-manager.io/cluster-issuer: letsencrypt
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
-  ingressClassName: nginx
+  {{- if .ingress.className }}
+  ingressClassName: {{ .ingress.className }}
+  {{- end }}
   rules:
-    - host: auth.adrianmagarola.click
+    - host: {{ .ingress.host }}
       http:
         paths:
-          - path: /
-            pathType: Prefix
+          - path: {{ .ingress.path | default "/" }}
+            pathType: {{ .ingress.pathType | default "Prefix" }}
             backend:
               service:
-                name: oauth2-proxy
+                name: {{ .name }}-oauth2-proxy
                 port:
-                  number: {{ .Values.service.port }}
+                  number: 4180 # Default port for oauth2-proxy service
+  {{- if .ingress.tls.enabled }}
   tls:
     - hosts:
-        - auth.adrianmagarola.click
-      secretName: oauth2-proxy-tls
+        - {{ .ingress.host }}
+      secretName: {{ .ingress.tls.secretName | default (printf "%s-oauth2-proxy-tls" .name) }}
+  {{- end }}
+---
+{{- end }}
+{{- end }}
