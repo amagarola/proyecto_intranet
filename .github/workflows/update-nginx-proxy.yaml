@@ -1,4 +1,4 @@
-name: Update NGINX Configuration
+name: 🌐 Actualizar configuración de NGINX
 
 on:
   workflow_dispatch:
