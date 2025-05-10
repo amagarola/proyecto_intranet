@@ -36,7 +36,6 @@ spec:
             - --http-address=0.0.0.0:4180
             - --upstream={{ .upstream }}
             - --redirect-url={{ .redirectURL }}
-            # Default args from global, can be overridden by instance specific args
             - --provider={{ $instanceArgs.provider | default $.Values.defaultArgs.provider }}
             {{- range $instanceArgs.emailDomains | default $.Values.defaultArgs.emailDomains }}
             - --email-domain={{ . }}
@@ -57,7 +56,6 @@ spec:
             {{- range $instanceArgs.whitelistDomains | default $.Values.defaultArgs.whitelistDomains }}
             - --whitelist-domain={{ . }}
             {{- end }}
-            # Instance specific extra args
             {{- range .extraArgs }}
             - {{ . }}
             {{- end }}
