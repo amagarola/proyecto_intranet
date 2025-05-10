@@ -27,13 +27,14 @@ spec:
           args:
             - --provider={{ .Values.config.provider }}
             - --email-domain={{ .Values.config.emailDomains | join "," }}
-            # - --upstream=http://argocd-server.argocd.svc.cluster.local:80 # Removed upstream
+            - --upstream=http://argocd-server.argocd.svc.cluster.local:80
+            - --ssl-insecure-skip-verify=true 
             - --cookie-secure={{ .Values.config.cookie.secure }}
             - --cookie-expire={{ .Values.config.cookie.expire }}
             - --cookie-refresh={{ .Values.config.cookie.refresh }}
             - --http-address=0.0.0.0:{{ .Values.service.port }}
             - --redirect-url={{ .Values.config.redirect_url }} # Added redirect URL
-            - --set-xauthrequest=true # Added set-xauthrequest
+            # - --set-xauthrequest=true # Added set-xauthrequest
             - --pass-access-token=false # Added pass-access-token
             - --pass-authorization-header=false # Added pass-authorization-header
             - --whitelist-domain=.adrianmagarola.click
