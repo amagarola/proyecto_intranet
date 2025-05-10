@@ -1,4 +1,4 @@
-name: Deploy Applications
+name: 📦🚀 Deploy Applications
 run-name: Deploy ${{ github.event.inputs.applications }}
 
 on:

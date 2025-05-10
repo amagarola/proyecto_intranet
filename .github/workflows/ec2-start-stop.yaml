@@ -1,4 +1,4 @@
-name: Iniciar/Detener Todas las Instancias EC2
+name: 🚀🛑 Iniciar/Detener Todas las Instancias EC2
 
 on:
   workflow_dispatch:

@@ -1,4 +1,4 @@
-name: Install LetsEncrypt Issuer
+name: 🔒 Install LetsEncrypt Issuer
 
 on:
   workflow_dispatch:

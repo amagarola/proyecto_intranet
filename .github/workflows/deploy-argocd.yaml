@@ -1,4 +1,4 @@
-name: Deploy ArgoCD
+name: 🚢 Deploy ArgoCD
 
 on:
   workflow_dispatch:
