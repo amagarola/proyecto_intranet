@@ -1,14 +1,22 @@
+{{- range .Values.oauth2proxyInstances }}
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: argocd
-  name: oauth2-proxy
+  name: {{ .name }}-oauth2-proxy
+  namespace: {{ .namespace }}
   labels:
-    app: {{ .Chart.Name }}
+    app.kubernetes.io/name: oauth2-proxy
+    app.kubernetes.io/instance: {{ .name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
 spec:
-  type: {{ .Values.service.type }}
+  type: ClusterIP # Or LoadBalancer, NodePort as needed, but ClusterIP is typical for internal proxy
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.port }}
+    - port: 4180
+      targetPort: http
+      protocol: TCP
+      name: http
   selector:
-    app: {{ .Chart.Name }}
+    app.kubernetes.io/name: oauth2-proxy
+    app.kubernetes.io/instance: {{ .name }}
+---
+{{- end }}

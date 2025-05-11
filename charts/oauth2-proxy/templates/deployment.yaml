@@ -1,57 +1,90 @@
+{{- range .Values.oauth2proxyInstances }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: argocd
-  name: oauth2-proxy
+  name: {{ .name }}-oauth2-proxy
+  namespace: {{ .namespace }}
   labels:
-    app: {{ .Chart.Name }}
+    app.kubernetes.io/name: oauth2-proxy
+    app.kubernetes.io/instance: {{ .name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
 spec:
-  nodeSelector:
-    node-role.k3s.io/master: "true"
-  revisionHistoryLimit: 0
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .replicaCount | default $.Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ .Chart.Name }}
+      app.kubernetes.io/name: oauth2-proxy
+      app.kubernetes.io/instance: {{ .name }}
   template:
     metadata:
       labels:
-        app: {{ .Chart.Name }}
+        app.kubernetes.io/name: oauth2-proxy
+        app.kubernetes.io/instance: {{ .name }}
     spec:
+      {{- with .nodeSelector | default $.Values.nodeSelector }}
+      nodeSelector:
+        {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .serviceAccount | default $.Values.serviceAccount }}
+      {{- if .name }}
+      serviceAccountName: {{ .name | default (printf "%s-oauth2-proxy" (include "oauth2-proxy.fullname" $)) }}
+      {{- end }}
+      {{- end }}
       containers:
         - name: oauth2-proxy
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - containerPort: {{ .Values.service.port }}
+          image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+
+          {{- $instanceArgs := .args | default dict }}
           args:
-            - --provider={{ .Values.config.provider }}
-            - --email-domain={{ .Values.config.emailDomains | join "," }}
-            - --upstream=http://argocd-server.argocd.svc.cluster.local:80
-            - --ssl-insecure-skip-verify=true 
-            - --cookie-secure={{ .Values.config.cookie.secure }}
-            - --cookie-expire={{ .Values.config.cookie.expire }}
-            - --cookie-refresh={{ .Values.config.cookie.refresh }}
-            - --http-address=0.0.0.0:{{ .Values.service.port }}
-            - --redirect-url={{ .Values.config.redirect_url }} # Added redirect URL
-            # - --set-xauthrequest=true # Added set-xauthrequest
-            - --pass-access-token=false # Added pass-access-token
-            - --pass-authorization-header=false # Added pass-authorization-header
-            - --whitelist-domain=.adrianmagarola.click
-            - --cookie-domain=.adrianmagarola.click
+            - --http-address=0.0.0.0:4180
+            - --upstream={{ .upstream }}
+            - --redirect-url={{ .redirectURL }}
+            - --provider={{ $instanceArgs.provider | default $.Values.defaultArgs.provider }}
+            {{- range $instanceArgs.emailDomains | default $.Values.defaultArgs.emailDomains }}
+            - --email-domain={{ . }}
+            {{- end }}
+            - --cookie-secure={{ $instanceArgs.cookieSecure | default $.Values.defaultArgs.cookieSecure }}
+            - --cookie-httponly={{ $instanceArgs.cookieHttpOnly | default $.Values.defaultArgs.cookieHttpOnly }}
+            - --cookie-expire={{ $instanceArgs.cookieExpire | default $.Values.defaultArgs.cookieExpire }}
+            - --cookie-refresh={{ $instanceArgs.cookieRefresh | default $.Values.defaultArgs.cookieRefresh }}
+            {{- if $instanceArgs.cookieDomain | default $.Values.defaultArgs.cookieDomain }}
+            - --cookie-domain={{ $instanceArgs.cookieDomain | default $.Values.defaultArgs.cookieDomain }}
+            {{- end }}
+            - --set-xauthrequest={{ $instanceArgs.setXAuthRequest | default $.Values.defaultArgs.setXAuthRequest }}
+            - --pass-access-token={{ $instanceArgs.passAccessToken | default $.Values.defaultArgs.passAccessToken }}
+            - --pass-authorization-header={{ $instanceArgs.passAuthorizationHeader | default $.Values.defaultArgs.passAuthorizationHeader }}
+            {{- if $instanceArgs.sslInsecureSkipVerify | default $.Values.defaultArgs.sslInsecureSkipVerify }}
+            - --ssl-insecure-skip-verify={{ $instanceArgs.sslInsecureSkipVerify | default $.Values.defaultArgs.sslInsecureSkipVerify }}
+            {{- end }}
+            {{- range $instanceArgs.whitelistDomains | default $.Values.defaultArgs.whitelistDomains }}
+            - --whitelist-domain={{ . }}
+            {{- end }}
+            {{- range .extraArgs }}
+            - "{{ . }}"
+            {{- end }}
           env:
             - name: OAUTH2_PROXY_CLIENT_ID
               valueFrom:
                 secretKeyRef:
-                  name: oauth2-proxy-secret
-                  key: client-id
+                  name: {{ .credentials.existingSecretName | default (printf "%s-oauth2-credentials" .name) }}
+                  key: clientID
             - name: OAUTH2_PROXY_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: oauth2-proxy-secret
-                  key: client-secret
+                  name: {{ .credentials.existingSecretName | default (printf "%s-oauth2-credentials" .name) }}
+                  key: clientSecret
             - name: OAUTH2_PROXY_COOKIE_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: oauth2-proxy-secret
-                  key: cookie-secret
+                  name: {{ .credentials.existingSecretName | default (printf "%s-oauth2-credentials" .name) }}
+                  key: cookieSecret
+          ports:
+            - containerPort: 4180
+              name: http
+          {{- with .resources | default $.Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+---
+{{- end }}

@@ -56,7 +56,7 @@ resource "aws_instance" "master" {
       "sudo mkdir -p /etc/rancher/k3s/",
       "echo \"write-kubeconfig-mode: \\\"0644\\\"\" | sudo tee /etc/rancher/k3s/config.yaml",
       "echo \"tls-san:\" | sudo tee -a /etc/rancher/k3s/config.yaml",
-      "echo \"  - ${self.public_ip}\" | sudo tee -a /etc/rancher/k3s/config.yaml",
+      "echo \"  - k3s.adrianmagarola.click\" | sudo tee -a /etc/rancher/k3s/config.yaml",
       "echo \"node-label:\" | sudo tee -a /etc/rancher/k3s/config.yaml",
       "echo \"  - \\\"node-role.k3s.io/master=true\\\"\" | sudo tee -a /etc/rancher/k3s/config.yaml",
       # "echo \"disable-cloud-controller: true\" | sudo tee -a /etc/rancher/k3s/config.yaml",

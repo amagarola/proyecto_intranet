@@ -2,7 +2,7 @@ server:
   service:
     type: ClusterIP
   ingress:
-    enabled: false
+    enabled: true
     ingressClassName: nginx
     hosts:
       - argocd.adrianmagarola.click

@@ -6,7 +6,7 @@ metadata:
     app: prometheus
 spec:
   nodeSelector:
-    node-role.k3s.io/master: "true"
+    node-role.k3s.io/worker: "true"
   replicas: {{ .Values.prometheus.replicaCount }}
   selector:
     matchLabels:

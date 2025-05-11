@@ -1,0 +1,150 @@
+intranet:
+  image:
+    repository: bitnami/wordpress
+    tag: latest # For production, consider pinning to a specific version e.g., "6.5.2"
+  # -- WordPress admin user credentials
+  # IMPORTANT: Change these default credentials for any production deployment.
+  # Consider using secrets for sensitive data.
+  username: admin
+  password: adminpassword
+  email: admin@example.com
+  siteName: "Mi Intranet Helm"
+  plugins:
+    - akismet
+    - all-in-one-intranet
+    - buddypress
+    - login-with-github
+    - time-clock
+    - wp-document-revisions
+    - wp-force-login
+  
+  # -- Resource requests and limits for the WordPress container
+  # Example:
+  # resources:
+  #   requests:
+  #     cpu: "100m"
+  #     memory: "256Mi"
+  #   limits:
+  #     cpu: "500m"
+  #     memory: "512Mi"
+  resources: {}
+
+  # -- Liveness probe configuration
+  # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /wp-login.php # WordPress login page, usually a good indicator
+      port: http # Container port name (or number 8080)
+    initialDelaySeconds: 180 # Time to wait before first probe
+    periodSeconds: 30    # How often to probe
+    timeoutSeconds: 5      # When the probe times out
+    failureThreshold: 6    # Retries before marking as failed
+    successThreshold: 1  # Min consecutive successes
+
+  # -- Readiness probe configuration
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /wp-login.php
+      port: http
+    initialDelaySeconds: 120
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+
+  # -- Additional environment variables for the WordPress container
+  # Example:
+  # extraEnvVars:
+  #   - name: WP_DEBUG
+  #     value: "true"
+  #   - name: WP_DEBUG_LOG
+  #     value: "true"
+  # To use secrets:
+  #   - name: MY_SECRET_ENV
+  #     valueFrom:
+  #       secretKeyRef:
+  #         name: my-wordpress-secrets
+  #         key: my-secret-key
+  extraEnvVars: []
+
+  # -- Configuration for using an external database (if mariadb.enabled is false)
+  externalDatabase:
+    # -- Set to true and configure below if mariadb.enabled is false and you are using an external DB
+    enabled: false
+    host: ""       # e.g., "my-external-db.example.com"
+    port: 3306
+    name: ""       # Database name, e.g., "wordpress_db_external"
+    user: ""       # Database user, e.g., "wordpress_user_external"
+    # -- Option 1: Provide password directly (less secure for production)
+    password: ""   # IMPORTANT: For production, use existingSecret or a secure injection method.
+    # -- Option 2: Reference an existing Kubernetes secret for the password
+    # existingSecret: "" # Name of the K8s secret containing the DB password (e.g., "my-external-db-secret")
+    # existingSecretPasswordKey: "database-password" # Key within the secret for the password
+
+  # -- Pod Security Context
+  # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001 # Bitnami images often use fsGroup 1001 for volume permissions
+
+  # -- Container Security Context
+  # Applied to the WordPress container
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001 # Bitnami WordPress image runs as user 1001
+    runAsGroup: 1001 # Bitnami WordPress image runs as group 1001
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    # readOnlyRootFilesystem: true # Set to true for enhanced security if WordPress and plugins allow.
+                                  # WordPress core needs to write to /bitnami/wordpress (volume).
+                                  # Some plugins might need write access to other paths. Test carefully.
+    capabilities:
+      drop:
+        - ALL
+      # Example of adding capabilities if needed:
+      # add:
+      #   - CHOWN
+      #   - FOWNER
+
+  serviceAccount:
+    # Specifies whether a service account should be created
+    create: true
+    # Annotations to add to the service account
+    annotations: {}
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: "nginx"
+  hostname: intranet.adrianmagarola.click # Ensure this DNS record points to your Ingress controller
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "letsencrypt" # Assumes cert-manager is installed and this issuer exists
+  tls: true
+
+mariadb:
+  # -- Configuration for the MariaDB subchart
+  enabled: true # Set to false to use an external database (configure under intranet.externalDatabase)
+  auth:
+    # IMPORTANT: Change these default credentials for any production deployment.
+    # Consider using secrets for sensitive data.
+    rootPassword: rootpassword
+    database: intranet_db
+    username: bn_intranet
+    password: intranetpass # This password is for the WordPress database user
+
+persistence:
+  enabled: true
+  size: 10Gi
+  # -- Storage class for WordPress data.
+  # "hostpath" is suitable for single-node development clusters (like k3s with local-path-provisioner).
+  # For production, you should use a persistent storage solution (e.g. "gp2", "standard", etc.)
+  storageClass: hostpath

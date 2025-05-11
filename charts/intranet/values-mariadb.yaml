@@ -1,0 +1,14 @@
+auth:
+  rootPassword: rootpassword
+  database: intranet_db # Changed from bitnami_wordpress
+  username: bn_intranet # Changed from bn_wordpress
+  password: intranetpass # Changed from wordpresspass
+
+primary:
+  persistence:
+    enabled: true
+    size: 8Gi
+
+# service: # This service section might be for MariaDB itself, ensure it's intended.
+#   type: ClusterIP
+
