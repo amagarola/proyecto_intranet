@@ -44,7 +44,7 @@ spec:
             - --email-domain={{ . }}
             {{- end }}
             - --cookie-secure={{ $instanceArgs.cookieSecure | default $.Values.defaultArgs.cookieSecure }}
-            - --cookie-http-only={{ $instanceArgs.cookieHttpOnly | default $.Values.defaultArgs.cookieHttpOnly }}
+            - --cookie-httponly={{ $instanceArgs.cookieHttpOnly | default $.Values.defaultArgs.cookieHttpOnly }}
             - --cookie-expire={{ $instanceArgs.cookieExpire | default $.Values.defaultArgs.cookieExpire }}
             - --cookie-refresh={{ $instanceArgs.cookieRefresh | default $.Values.defaultArgs.cookieRefresh }}
             {{- if $instanceArgs.cookieDomain | default $.Values.defaultArgs.cookieDomain }}
