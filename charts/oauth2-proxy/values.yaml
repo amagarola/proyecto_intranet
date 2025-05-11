@@ -36,54 +36,54 @@ defaultArgs:
 
 # Lista de instancias de oauth2-proxy a desplegar
 oauth2proxyInstances:
-  - name: "argocd" # Nombre único para esta instancia (usado en nombres de recursos)
-    namespace: "argocd" # Namespace donde se desplegará esta instancia de oauth2-proxy
-    # replicaCount: 1 # Sobreescribe el global si se establece
+  # - name: "argocd" # Nombre único para esta instancia (usado en nombres de recursos)
+  #   namespace: "argocd" # Namespace donde se desplegará esta instancia de oauth2-proxy
+  #   # replicaCount: 1 # Sobreescribe el global si se establece
 
-    # Credenciales para esta instancia.
-    credentials:
-      # clientId: "OVERRIDE_CLIENT_ID_FOR_ARGOCD" # Opcional, si es diferente del default
-      # clientSecret: "OVERRIDE_CLIENT_SECRET_FOR_ARGOCD" # Opcional
-      cookieSecret: ""
-      # existingSecretName: "argocd-oauth-credentials" # Opcional: si las credenciales (clientId, clientSecret, cookieSecret) están en un Secret de K8s existente
+  #   # Credenciales para esta instancia.
+  #   credentials:
+  #     # clientId: "OVERRIDE_CLIENT_ID_FOR_ARGOCD" # Opcional, si es diferente del default
+  #     # clientSecret: "OVERRIDE_CLIENT_SECRET_FOR_ARGOCD" # Opcional
+  #     cookieSecret: ""
+  #     # existingSecretName: "argocd-oauth-credentials" # Opcional: si las credenciales (clientId, clientSecret, cookieSecret) están en un Secret de K8s existente
 
-    # Configuración del upstream (la aplicación protegida)
-    upstream: "http://argocd-server.argocd.svc.cluster.local:80"
-    redirectURL: "https://argocd.adrianmagarola.click/oauth2/callback" # URL de callback de OAuth para esta instancia
+  #   # Configuración del upstream (la aplicación protegida)
+  #   upstream: "http://argocd-server.argocd.svc.cluster.local:80"
+  #   redirectURL: "https://argocd.adrianmagarola.click/oauth2/callback" # URL de callback de OAuth para esta instancia
 
-    # Configuración de Ingress para exponer este servicio oauth2-proxy
-    ingress:
-      enabled: true
-      host: "argocd.adrianmagarola.click" # Host para el servicio oauth2-proxy en sí
-      # className: "nginx" # Opcional: especifica la clase de Ingress
-      annotations: # Opcional: anotaciones específicas para este Ingress
-        cert-manager.io/cluster-issuer: "letsencrypt" # Ejemplo
-        nginx.ingress.kubernetes.io/ssl-redirect: "true"
-        nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-      tls:
-        enabled: true
-        secretName: "argocd-tls" # Secret de K8s para el certificado TLS de auth-argocd...
+  #   # Configuración de Ingress para exponer este servicio oauth2-proxy
+  #   ingress:
+  #     enabled: true
+  #     host: "argocd.adrianmagarola.click" # Host para el servicio oauth2-proxy en sí
+  #     className: "nginx"
+  #     annotations: # Opcional: anotaciones específicas para este Ingress
+  #       cert-manager.io/cluster-issuer: "letsencrypt" # Ejemplo
+  #       nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  #       nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+  #     tls:
+  #       enabled: true
+  #       secretName: "argocd-tls" # Secret de K8s para el certificado TLS de auth-argocd...
 
-    # Argumentos adicionales o para sobreescribir los defaults para esta instancia
-    # args:
-    #   emailDomains:
-    #     - "specific-domain.com"
+  #   # Argumentos adicionales o para sobreescribir los defaults para esta instancia
+  #   # args:
+  #   #   emailDomains:
+  #   #     - "specific-domain.com"
 
-  - name: "grafana"
-    namespace: "monitoring" # Asumiendo que grafana está en el namespace 'monitoring'
-    credentials:
-      cookieSecret: ""
-    upstream: "http://grafana.monitoring.svc.cluster.local:3000"
-    redirectURL: "https://grafana.adrianmagarola.click/oauth2/callback"
-    ingress:
-      enabled: true
-      host: "grafana.adrianmagarola.click"
-      annotations:
-        cert-manager.io/cluster-issuer: "letsencrypt"
-        nginx.ingress.kubernetes.io/ssl-redirect: "true"
-      tls:
-        enabled: true
-        secretName: "grafana-tls"
+  # - name: "grafana"
+  #   namespace: "monitoring" # Asumiendo que grafana está en el namespace 'monitoring'
+  #   credentials:
+  #     cookieSecret: ""
+  #   upstream: "http://grafana.monitoring.svc.cluster.local:3000"
+  #   redirectURL: "https://grafana.adrianmagarola.click/oauth2/callback"
+  #   ingress:
+  #     enabled: true
+  #     host: "grafana.adrianmagarola.click"
+  #     annotations:
+  #       cert-manager.io/cluster-issuer: "letsencrypt"
+  #       nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  #     tls:
+  #       enabled: true
+  #       secretName: "grafana-tls"
 
   - name: "intranet" # Nombre único para esta instancia
     namespace: "intranet" # Cambia esto al namespace donde corre tu sitio principal si es diferente
