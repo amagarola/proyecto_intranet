@@ -83,7 +83,6 @@ operator:
   imagePullPolicy: IfNotPresent
   args:
     - --kubelet-service=kube-system/kubelet
-    - --logtostderr=true
   port: 8080
   resources:
     requests:
