@@ -2,7 +2,7 @@ prometheus:
   replicaCount: 1
   image:
     repository: prom/prometheus
-    tag: 2.0.0
+    tag: v2.51.2
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
