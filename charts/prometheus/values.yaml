@@ -69,3 +69,26 @@ rbac:
 # Ingress configuration is usually handled separately or for Alertmanager/Grafana
 # ingress:
 #   enabled: false
+
+operator:
+  name: prometheus-operator
+  service:
+    type: ClusterIP
+    ports:
+      - name: http
+        port: 8080
+        targetPort: http
+  replicas: 1
+  image: quay.io/prometheus-operator/prometheus-operator:v0.74.0
+  imagePullPolicy: IfNotPresent
+  args:
+    - --kubelet-service=kube-system/kubelet
+    - --logtostderr=true
+  port: 8080
+  resources:
+    requests:
+      memory: "200Mi"
+      cpu: "100m"
+    limits:
+      memory: "400Mi"
+      cpu: "200m"
