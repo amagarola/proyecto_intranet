@@ -51,7 +51,7 @@ prometheusInstance:
 
 # ServiceAccount for the Prometheus instance
 serviceAccount:
-  create: false # Changed from true
+  create: true # Changed from true
   # Name of the service account. If not set and create is true, a name is generated using fullname template
   # If create is false, this name should point to an existing ServiceAccount.
   # The Prometheus Operator (kube-prometheus-stack) usually creates a ServiceAccount like <stack-release-name>-prometheus (e.g., prometheus-operator-prometheus).
@@ -61,7 +61,7 @@ serviceAccount:
 
 # RBAC for the Prometheus instance (ClusterRole and ClusterRoleBinding)
 rbac:
-  create: false # Changed from true
+  create: true # Changed from true
 
 # Default service monitor scrape interval for Prometheus
 # serviceMonitorScrapeInterval: 30s
