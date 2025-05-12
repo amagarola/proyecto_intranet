@@ -1,12 +1,68 @@
-prometheus:
+prometheusInstance:
+  # Name for the Prometheus custom resource, defaults to chart fullname
+  # name: "" 
+
   replicaCount: 1
-  image:
-    repository: prom/prometheus
-    tag: v2.51.2
-    pullPolicy: IfNotPresent
-  service:
-    type: ClusterIP
-    port: 9090
+  
+  # Image for the Prometheus instance (e.g., "quay.io/prometheus/prometheus:v2.51.2")
+  # The Prometheus Operator might also use a 'version' field which maps to a specific image.
+  # For direct control, specify the full image path and tag.
+  image: "prom/prometheus:v2.51.2"
+
+  # serviceAccountName will be derived using helpers, see serviceAccount section below
+
+  # Selectors for discovering ServiceMonitors, PodMonitors, and PrometheusRules
+  # These allow Prometheus to find its scrape targets and rules.
+  # Example:
+  # serviceMonitorSelector:
+  #   matchLabels:
+  #     team: frontend
+  serviceMonitorSelector: {}
+  podMonitorSelector: {}
+  ruleSelector: {}
+  
+  # Resources for the Prometheus pods
   resources: {}
-  ingress:
-    enabled: false
+  #  limits:
+  #    cpu: 200m
+  #    memory: 256Mi
+  #  requests:
+  #    cpu: 100m
+  #    memory: 128Mi
+
+  # Node selector for Prometheus pods
+  nodeSelector:
+    node-role.k3s.io/worker: "true"
+
+  # Storage configuration (e.g., persistent volume claims)
+  # storage:
+  #   volumeClaimTemplate:
+  #     spec:
+  #       storageClassName: standard
+  #       resources:
+  #         requests:
+  #           storage: 10Gi
+
+  # Alertmanager configuration
+  # alertmanagersConfig:
+  #   namespace: monitoring
+  #   name: alertmanager-main
+  #   port: web
+
+# ServiceAccount for the Prometheus instance
+serviceAccount:
+  create: true
+  # Name of the service account. If not set and create is true, a name is generated using fullname template
+  name: ""
+  annotations: {}
+
+# RBAC for the Prometheus instance (ClusterRole and ClusterRoleBinding)
+rbac:
+  create: true
+
+# Default service monitor scrape interval for Prometheus
+# serviceMonitorScrapeInterval: 30s
+
+# Ingress configuration is usually handled separately or for Alertmanager/Grafana
+# ingress:
+#   enabled: false

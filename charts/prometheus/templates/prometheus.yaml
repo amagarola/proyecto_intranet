@@ -1,0 +1,86 @@
+{{- if .Values.prometheusInstance -}}
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: {{ .Values.prometheusInstance.name | default (include "prometheus.fullname" .) }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "prometheus.labels" . | nindent 4 }}
+    {{- with .Values.prometheusInstance.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.prometheusInstance.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.prometheusInstance.replicaCount | default 1 }}
+  {{- if .Values.prometheusInstance.image }}
+  image: {{ .Values.prometheusInstance.image }}
+  {{- else if .Values.prometheusInstance.version }}
+  version: {{ .Values.prometheusInstance.version }}
+  {{- end }}
+  serviceAccountName: {{ include "prometheus.serviceAccountName" . }}
+  {{- if .Values.prometheusInstance.serviceMonitorSelector }}
+  serviceMonitorSelector:
+    {{- toYaml .Values.prometheusInstance.serviceMonitorSelector | nindent 4 }}
+  {{- end }}
+  {{- if .Values.prometheusInstance.podMonitorSelector }}
+  podMonitorSelector:
+    {{- toYaml .Values.prometheusInstance.podMonitorSelector | nindent 4 }}
+  {{- end }}
+  {{- if .Values.prometheusInstance.ruleSelector }}
+  ruleSelector:
+    {{- toYaml .Values.prometheusInstance.ruleSelector | nindent 4 }}
+  {{- end }}
+  {{- if .Values.prometheusInstance.resources }}
+  resources:
+    {{- toYaml .Values.prometheusInstance.resources | nindent 4 }}
+  {{- end }}
+  {{- if .Values.prometheusInstance.nodeSelector }}
+  nodeSelector:
+    {{- toYaml .Values.prometheusInstance.nodeSelector | nindent 4 }}
+  {{- end }}
+  {{- if .Values.prometheusInstance.storage }}
+  storage:
+    {{- toYaml .Values.prometheusInstance.storage | nindent 4 }}
+  {{- end }}
+  {{- if .Values.prometheusInstance.alertmanagersConfig }}
+  alerting:
+    alertmanagers:
+      - namespace: {{ .Values.prometheusInstance.alertmanagersConfig.namespace | default .Release.Namespace }}
+        name: {{ .Values.prometheusInstance.alertmanagersConfig.name | default "alertmanager-main" }}
+        port: {{ .Values.prometheusInstance.alertmanagersConfig.port | default "web" }}
+  {{- end }}
+  {{- if .Values.prometheusInstance.remoteWrite }}
+  remoteWrite:
+    {{- toYaml .Values.prometheusInstance.remoteWrite | nindent 4 }}
+  {{- end }}
+  {{- if .Values.prometheusInstance.remoteRead }}
+  remoteRead:
+    {{- toYaml .Values.prometheusInstance.remoteRead | nindent 4 }}
+  {{- end }}
+  {{- if .Values.prometheusInstance.securityContext }}
+  securityContext:
+    {{- toYaml .Values.prometheusInstance.securityContext | nindent 4 }}
+  {{- end }}
+  {{- if .Values.prometheusInstance.listenLocal }}
+  listenLocal: {{ .Values.prometheusInstance.listenLocal }}
+  {{- end }}
+  {{- if .Values.prometheusInstance.containers }}
+  containers:
+    {{- toYaml .Values.prometheusInstance.containers | nindent 4 }}
+  {{- end }}
+  {{- if .Values.prometheusInstance.secrets }}
+  secrets:
+    {{- toYaml .Values.prometheusInstance.secrets | nindent 4 }}
+  {{- end }}
+  {{- if .Values.prometheusInstance.configMaps }}
+  configMaps:
+    {{- toYaml .Values.prometheusInstance.configMaps | nindent 4 }}
+  {{- end }}
+  {{- if .Values.prometheusInstance.additionalScrapeConfigs }}
+  additionalScrapeConfigs:
+    {{- toYaml .Values.prometheusInstance.additionalScrapeConfigs | nindent 4 }}
+  {{- end }}
+{{- end }}
