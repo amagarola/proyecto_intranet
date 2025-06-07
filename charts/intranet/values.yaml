@@ -112,10 +112,6 @@ intranet:
     create: true
     name: ""
 
-  serviceAccount:
-    create: true
-    name: ""
-
 service:
   type: ClusterIP
   port: 80
@@ -153,3 +149,7 @@ oauth2Proxy:
   clientSecret: "REEMPLAZA_CON_TU_CLIENT_SECRET"
   cookieSecret: "REEMPLAZA_CON_UN_SECRETO_BASE64_32BYTES"
   redirectUrl: "https://adrianmagarola.click/wp-login.php?loginSocial=github"
+
+serviceAccount:
+  create: true
+  name: ""
