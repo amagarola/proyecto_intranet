@@ -24,6 +24,15 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       {{- end }}
+      initContainers:
+        - name: copy-favicon
+          image: busybox
+          command: ["sh", "-c", "cp /favicon/favicon.ico /bitnami/wordpress/wp-content/uploads/favicon.ico"]
+          volumeMounts:
+            - name: favicon
+              mountPath: /favicon
+            - name: intranet-storage
+              mountPath: /bitnami/wordpress
       containers:
         - name: intranet-app
           image: "{{ .Values.intranet.image.repository }}:{{ .Values.intranet.image.tag }}"
@@ -127,6 +136,10 @@ spec:
                     # Crear página de Control Horario con el shortcode de Time Clock
                     wp post create --post_type=page --post_title="Control Horario" --post_status=publish --post_content='[timeclock]' --allow-root || true
       volumes:
+        - name: favicon
+          hostPath:
+            path: e:/github/proyecto_intranet/charts/intranet/files
+            type: Directory
         - name: intranet-storage
           persistentVolumeClaim:
             claimName: "{{ include "intranet.fullname" . }}-pvc"

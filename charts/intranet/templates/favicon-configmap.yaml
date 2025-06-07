@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: favicon-configmap
+  namespace: default
+data:
+  favicon.ico: |
+    # (El contenido binario real del favicon debe ser insertado aquí en base64 o como archivo, pero los ConfigMap no soportan binarios grandes. Lo ideal es usar un initContainer que descargue el favicon.)
