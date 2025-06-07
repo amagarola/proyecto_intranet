@@ -112,6 +112,10 @@ intranet:
     create: true
     name: ""
 
+  serviceAccount:
+    create: true
+    name: ""
+
 service:
   type: ClusterIP
   port: 80
