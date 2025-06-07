@@ -14,6 +14,7 @@ on:
           - wikijs
           - prometheus
           - grafana
+          - intranet
 
 jobs:
   deploy:

@@ -122,9 +122,9 @@ service:
   port: 80
 
 ingress:
-  enabled: false
+  enabled: true
   className: "nginx"
-  hostname: intranet.adrianmagarola.click # Ensure this DNS record points to your Ingress controller
+  hostname: adrianmagarola.click # Ensure this DNS record points to your Ingress controller
   annotations:
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: "letsencrypt" # Assumes cert-manager is installed and this issuer exists
