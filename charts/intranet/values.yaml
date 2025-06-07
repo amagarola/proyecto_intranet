@@ -1,6 +1,6 @@
 podSecurityContext:
   enabled: true
-  fsGroup: 0
+  fsGroup: 1001
 
 containerSecurityContext:
   enabled: true
