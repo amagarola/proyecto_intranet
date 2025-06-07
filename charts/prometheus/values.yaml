@@ -24,6 +24,8 @@ prometheusInstance:
   serviceMonitorSelector: {}
   podMonitorSelector: {}
   ruleSelector: {}
+  scrapeInterval: "30s"
+  evaluationInterval: "30s"
   
   # Resources for the Prometheus pods
   resources: {}
