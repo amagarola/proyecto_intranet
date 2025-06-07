@@ -4,8 +4,8 @@ kind: Ingress
 metadata:
   name: "{{ include "intranet.fullname" . }}"
   annotations:
-    nginx.ingress.kubernetes.io/auth-url: "http://oauth2-proxy.default.svc.cluster.local/oauth2/auth"
-    nginx.ingress.kubernetes.io/auth-signin: "http://$host/oauth2/start?rd=$request_uri"
+    # nginx.ingress.kubernetes.io/auth-url: "http://oauth2-proxy.default.svc.cluster.local/oauth2/auth"
+    # nginx.ingress.kubernetes.io/auth-signin: "http://$host/oauth2/start?rd=$request_uri"
     {{- toYaml .Values.ingress.annotations | nindent 4 }}
 spec:
   ingressClassName: "{{ .Values.ingress.className }}"
