@@ -1,3 +1,7 @@
+podSecurityContext:
+  enabled: true
+  fsGroup: 1001
+
 intranet:
   image:
     repository: bitnami/wordpress
