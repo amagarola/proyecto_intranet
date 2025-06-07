@@ -15,7 +15,7 @@ spec:
         app: "{{ include "intranet.name" . }}"
     spec:
       nodeSelector:
-        node-role.k3s.io/worker: "true"
+        node-role.kubernetes.io/worker: 'true'
       {{- if .Values.serviceAccount.create }}
       serviceAccountName: {{ include "intranet.serviceAccountName" . }}
       {{- end }}

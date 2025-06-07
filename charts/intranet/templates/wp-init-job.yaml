@@ -11,7 +11,7 @@ spec:
   template:
     spec:
       nodeSelector:
-        node-role.k3s.io/worker: "true"
+        node-role.kubernetes.io/worker: 'true'
       restartPolicy: OnFailure
       containers:
         - name: wp-init
