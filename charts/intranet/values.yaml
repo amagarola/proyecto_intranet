@@ -32,6 +32,20 @@ intranet:
     # - wp-document-revisions
     # - wp-force-login
     - wp-maintenance-mode
+  pages:
+    - title: "Mantenimiento"
+      content: |
+        <div style="text-align:center;padding:40px 0;">
+          <h1>En mantenimiento</h1>
+          <p>La intranet está temporalmente fuera de servicio por tareas de mantenimiento.<br>Por favor, vuelve a intentarlo más tarde.</p>
+        </div>
+      main: true
+    - title: "Inicio"
+    - title: "Documentos"
+    - title: "Noticias"
+    - title: "Directorio"
+    - title: "Control Horario"
+      content: "[timeclock]"
   
   # -- Resource requests and limits for the WordPress container
   # Example:

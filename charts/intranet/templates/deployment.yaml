@@ -127,12 +127,12 @@ spec:
                     done
                     # Instalar y activar tema Twenty Twenty-One
                     wp theme install twentytwentyone --activate --allow-root
-                    # Crear páginas básicas si no existen
-                    for page in "Inicio" "Documentos" "Noticias" "Directorio"; do
-                      wp post create --post_type=page --post_title="$page" --post_status=publish --allow-root || true
-                    done
-                    # Crear página de Control Horario con el shortcode de Time Clock
-                    wp post create --post_type=page --post_title="Control Horario" --post_status=publish --post_content='[timeclock]' --allow-root || true
+                    {{- if .Values.intranet.pages }}
+                    # Crear páginas desde values.yaml
+                    {{- range .Values.intranet.pages }}
+                    wp post create --post_type=page --post_title='{{ .title }}' --post_status=publish {{- if .content }} --post_content='{{ .content }}'{{- end }} --allow-root || true
+                    {{- end }}
+                    {{- end }}
       volumes:
         - name: intranet-storage
           persistentVolumeClaim:
