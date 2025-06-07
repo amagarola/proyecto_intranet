@@ -1,6 +1,8 @@
 podSecurityContext:
   enabled: true
   fsGroup: 1001
+  supplementalGroups:
+    - 1001
 
 containerSecurityContext:
   enabled: true
@@ -102,6 +104,8 @@ intranet:
   podSecurityContext:
     enabled: true
     fsGroup: 1001 # Bitnami images often use fsGroup 1001 for volume permissions
+    supplementalGroups:
+      - 1001
 
   # -- Container Security Context
   # Applied to the WordPress container
