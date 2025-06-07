@@ -5,8 +5,6 @@ metadata:
   labels:
     {{- include "intranet.labels" . | nindent 4 }}
 spec:
-  nodeSelector:
-    node-role.k3s.io/worker: "true"
   replicas: 1
   selector:
     matchLabels:
@@ -16,6 +14,8 @@ spec:
       labels:
         app: "{{ include "intranet.name" . }}"
     spec:
+      nodeSelector:
+        node-role.k3s.io/worker: "true"
       {{- if .Values.serviceAccount.create }}
       serviceAccountName: {{ include "intranet.serviceAccountName" . }}
       {{- end }}
@@ -117,6 +117,14 @@ spec:
                     for plugin in $(echo "{{ join " " .Values.intranet.plugins }}"); do
                       wp plugin install $plugin --activate --allow-root
                     done
+                    # Instalar y activar tema Twenty Twenty-One
+                    wp theme install twentytwentyone --activate --allow-root
+                    # Crear páginas básicas si no existen
+                    for page in "Inicio" "Documentos" "Noticias" "Directorio"; do
+                      wp post create --post_type=page --post_title="$page" --post_status=publish --allow-root || true
+                    done
+                    # Crear página de Control Horario con el shortcode de Time Clock
+                    wp post create --post_type=page --post_title="Control Horario" --post_status=publish --post_content='[timeclock]' --allow-root || true
       volumes:
         - name: intranet-storage
           persistentVolumeClaim:

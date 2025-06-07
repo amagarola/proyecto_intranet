@@ -12,3 +12,20 @@ primary:
 # service: # This service section might be for MariaDB itself, ensure it's intended.
 #   type: ClusterIP
 
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podSecurityContext:
+  fsGroup: 1001
+
+containerSecurityContext:
+  runAsUser: 1001
+  runAsGroup: 1001
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+

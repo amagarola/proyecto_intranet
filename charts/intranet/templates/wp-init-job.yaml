@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ include "intranet.fullname" . }}-wp-init"
+  labels:
+    app: "{{ include "intranet.name" . }}"
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    spec:
+      nodeSelector:
+        node-role.k3s.io/worker: "true"
+      restartPolicy: OnFailure
+      containers:
+        - name: wp-init
+          image: bitnami/wordpress:latest
+          command:
+            - /bin/bash
+            - -c
+            - |
+              sleep 90
+              export WORDPRESS_DB_HOST="{{ .Release.Name }}-mariadb"
+              export WORDPRESS_DB_USER="{{ .Values.mariadb.auth.username }}"
+              export WORDPRESS_DB_PASSWORD="{{ .Values.mariadb.auth.password }}"
+              export WORDPRESS_DB_NAME="{{ .Values.mariadb.auth.database }}"
+              cd /bitnami/wordpress
+              # Esperar a que la base de datos esté lista
+              for i in {1..30}; do
+                wp db check --allow-root && break
+                echo "Esperando a que la base de datos esté lista..."
+                sleep 10
+              done
+              # Instalar plugins y tema
+              wp plugin install all-in-one-intranet buddypress login-with-github time-clock wp-document-revisions wp-force-login akismet --activate --allow-root
+              wp theme install twentytwentyone --activate --allow-root
+              for page in "Inicio" "Documentos" "Noticias" "Directorio"; do
+                wp post create --post_type=page --post_title="$page" --post_status=publish --allow-root || true
+              done
+              wp post create --post_type=page --post_title="Control Horario" --post_status=publish --post_content='[timeclock]' --allow-root || true
+          volumeMounts:
+            - name: intranet-storage
+              mountPath: /bitnami/wordpress
+      volumes:
+        - name: intranet-storage
+          persistentVolumeClaim:
+            claimName: "{{ include "intranet.fullname" . }}-pvc"
