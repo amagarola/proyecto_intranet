@@ -31,6 +31,7 @@ intranet:
     - time-clock
     - wp-document-revisions
     - wp-force-login
+    - wp-maintenance-mode
   
   # -- Resource requests and limits for the WordPress container
   # Example:
