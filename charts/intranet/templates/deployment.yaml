@@ -43,52 +43,51 @@ spec:
             {{- toYaml .Values.intranet.resources | nindent 12 }}
           {{- end }}
           ports:
-            - name: http # Named port for probes
+            - name: http
               containerPort: 8080
               protocol: TCP
           env:
-            - name: WORDPRESS_USERNAME
-              value: "{{ .Values.intranet.username }}"
-            - name: WORDPRESS_PASSWORD
-              value: "{{ .Values.intranet.password }}"
-            - name: WORDPRESS_EMAIL
-              value: "{{ .Values.intranet.email }}"
-            - name: WORDPRESS_BLOG_NAME
-              value: "{{ .Values.intranet.siteName }}"
-            {{- if .Values.intranet.externalDatabase.enabled }}
-            - name: WORDPRESS_DATABASE_HOST
-              value: "{{ .Values.intranet.externalDatabase.host }}"
-            - name: WORDPRESS_DATABASE_PORT_NUMBER # Bitnami WordPress uses this for port
-              value: "{{ .Values.intranet.externalDatabase.port | toString }}"
-            - name: WORDPRESS_DATABASE_NAME
-              value: "{{ .Values.intranet.externalDatabase.name }}"
-            - name: WORDPRESS_DATABASE_USER
-              value: "{{ .Values.intranet.externalDatabase.user }}"
-            - name: WORDPRESS_DATABASE_PASSWORD
-              {{- if .Values.intranet.externalDatabase.existingSecret }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.intranet.externalDatabase.existingSecret }}
-                  key: {{ .Values.intranet.externalDatabase.existingSecretPasswordKey }}
-              {{- else }}
-              value: "{{ .Values.intranet.externalDatabase.password }}"
-              {{- end }}
-            {{- else if .Values.mariadb.enabled }} # Use MariaDB subchart
-            - name: WORDPRESS_DATABASE_HOST
-              value: "{{ .Release.Name }}-mariadb"
-            - name: WORDPRESS_DATABASE_PORT_NUMBER # Default for MariaDB is 3306
-              value: "3306"
-            - name: WORDPRESS_DATABASE_NAME
-              value: "{{ .Values.mariadb.auth.database }}"
-            - name: WORDPRESS_DATABASE_USER
-              value: "{{ .Values.mariadb.auth.username }}"
-            - name: WORDPRESS_DATABASE_PASSWORD
-              value: "{{ .Values.mariadb.auth.password }}"
+          - name: WORDPRESS_USERNAME
+            value: "{{ .Values.intranet.username }}"
+          - name: WORDPRESS_PASSWORD
+            value: "{{ .Values.intranet.password }}"
+          - name: WORDPRESS_EMAIL
+            value: "{{ .Values.intranet.email }}"
+          - name: WORDPRESS_BLOG_NAME
+            value: "{{ .Values.intranet.siteName }}"
+          {{- if .Values.intranet.externalDatabase.enabled }}
+          - name: WORDPRESS_DATABASE_HOST
+            value: "{{ .Values.intranet.externalDatabase.host }}"
+          - name: WORDPRESS_DATABASE_PORT_NUMBER
+            value: "{{ .Values.intranet.externalDatabase.port | toString }}"
+          - name: WORDPRESS_DATABASE_NAME
+            value: "{{ .Values.intranet.externalDatabase.name }}"
+          - name: WORDPRESS_DATABASE_USER
+            value: "{{ .Values.intranet.externalDatabase.user }}"
+          - name: WORDPRESS_DATABASE_PASSWORD
+            {{- if .Values.intranet.externalDatabase.existingSecret }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.intranet.externalDatabase.existingSecret }}
+                key: {{ .Values.intranet.externalDatabase.existingSecretPasswordKey }}
+            {{- else }}
+            value: "{{ .Values.intranet.externalDatabase.password }}"
             {{- end }}
-            # Add extra environment variables
-            {{- if .Values.intranet.extraEnvVars }}
-            {{- toYaml .Values.intranet.extraEnvVars | nindent 12 }}
-            {{- end }}
+          {{- else if .Values.mariadb.enabled }}
+          - name: WORDPRESS_DATABASE_HOST
+            value: "{{ .Release.Name }}-mariadb"
+          - name: WORDPRESS_DATABASE_PORT_NUMBER
+            value: "3306"
+          - name: WORDPRESS_DATABASE_NAME
+            value: "{{ .Values.mariadb.auth.database }}"
+          - name: WORDPRESS_DATABASE_USER
+            value: "{{ .Values.mariadb.auth.username }}"
+          - name: WORDPRESS_DATABASE_PASSWORD
+            value: "{{ .Values.mariadb.auth.password }}"
+          {{- end }}
+          {{- if .Values.intranet.extraEnvVars }}
+          {{- toYaml .Values.intranet.extraEnvVars | nindent 12 }}
+          {{- end }}
           {{- if .Values.intranet.livenessProbe.enabled }}
           livenessProbe:
             httpGet:
@@ -123,16 +122,15 @@ spec:
                   - |
                     sleep 60
                     for plugin in $(echo "{{ join " " .Values.intranet.plugins }}"); do
-                      wp plugin install $plugin --activate --allow-root
+                      wp plugin install "$plugin" --activate --allow-root
                     done
-                    # Instalar y activar tema Twenty Twenty-One
                     wp theme install twentytwentyone --activate --allow-root
-                    {{- if .Values.intranet.pages }}
-                    # Crear páginas desde values.yaml
-                    {{- range .Values.intranet.pages }}
-                    wp post create --post_type=page --post_title='{{ .title }}' --post_status=publish {{- if .content }} --post_content='{{ .content }}'{{- end }} --allow-root || true
-                    {{- end }}
-                    {{- end }}
+                    wp post create --post_type=page --post_title='Mantenimiento' --post_status=publish --post_content='<div style=text-align:center;padding:40px><h1>En mantenimiento</h1><p>La intranet está temporalmente fuera de servicio por tareas de mantenimiento.</p></div>' --allow-root || true
+                    wp post create --post_type=page --post_title='Inicio' --post_status=publish --allow-root || true
+                    wp post create --post_type=page --post_title='Documentos' --post_status=publish --allow-root || true
+                    wp post create --post_type=page --post_title='Noticias' --post_status=publish --allow-root || true
+                    wp post create --post_type=page --post_title='Directorio' --post_status=publish --allow-root || true
+                    wp post create --post_type=page --post_title='Control Horario' --post_status=publish --post_content='[timeclock]' --allow-root || true
       volumes:
         - name: intranet-storage
           persistentVolumeClaim:
