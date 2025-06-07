@@ -70,7 +70,7 @@ rbac:
   create: true # Ensures your chart doesn't try to create ClusterRole/ClusterRoleBinding
 
 # Default service monitor scrape interval for Prometheus
-# serviceMonitorScrapeInterval: 30s
+serviceMonitorScrapeInterval: 30s
 
 # Ingress configuration is usually handled separately or for Alertmanager/Grafana
 # ingress:
