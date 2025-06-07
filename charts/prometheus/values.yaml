@@ -1,3 +1,7 @@
+prometheus:
+  prometheusSpec:
+    scrapeInterval: "30s"
+    evaluationInterval: "30s"
 prometheusInstance:
   # Name for the Prometheus custom resource, defaults to chart fullname
   # name: "" 
