@@ -6,6 +6,7 @@ metadata:
     {{- include "intranet.labels" . | nindent 4 }}
 spec:
   replicas: 1
+  revisionHistoryLimit: 0
   selector:
     matchLabels:
       app: "{{ include "intranet.name" . }}"

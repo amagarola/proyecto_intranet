@@ -125,6 +125,8 @@ intranet:
   serviceAccount:
     create: true
     name: ""
+  # -- Limitar el historial de ReplicaSets para evitar acumulación en el clúster
+  revisionHistoryLimit: 0
 
 service:
   type: ClusterIP
