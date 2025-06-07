@@ -8,7 +8,7 @@ intranet:
   username: admin
   password: adminpassword
   email: admin@example.com
-  siteName: "Mi Intranet Helm"
+  siteName: "Mi Intranet"
   plugins:
     - akismet
     - all-in-one-intranet
@@ -148,3 +148,9 @@ persistence:
   # "hostpath" is suitable for single-node development clusters (like k3s with local-path-provisioner).
   # For production, you should use a persistent storage solution (e.g. "gp2", "standard", etc.)
   storageClass: hostpath
+
+oauth2Proxy:
+  clientId: "REEMPLAZA_CON_TU_CLIENT_ID"
+  clientSecret: "REEMPLAZA_CON_TU_CLIENT_SECRET"
+  cookieSecret: "REEMPLAZA_CON_UN_SECRETO_BASE64_32BYTES"
+  redirectUrl: "https://adrianmagarola.click/wp-login.php?loginSocial=github"
