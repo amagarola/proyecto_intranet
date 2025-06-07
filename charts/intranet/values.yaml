@@ -156,7 +156,7 @@ persistence:
   # -- Storage class for WordPress data.
   # "hostpath" is suitable for single-node development clusters (like k3s with local-path-provisioner).
   # For production, you should use a persistent storage solution (e.g. "gp2", "standard", etc.)
-  storageClass: hostpath
+  storageClass: local-path # Change to your production storage class, e.g., "gp2" for AWS EBS, "standard" for GKE, etc.
 
 oauth2Proxy:
   clientId: "REEMPLAZA_CON_TU_CLIENT_ID"
