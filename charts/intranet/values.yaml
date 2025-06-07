@@ -24,13 +24,13 @@ intranet:
   email: admin@example.com
   siteName: "Mi Intranet"
   plugins:
-    - akismet
+    # - akismet
     - all-in-one-intranet
-    - buddypress
+    # - buddypress
     - login-with-github
     - time-clock
-    - wp-document-revisions
-    - wp-force-login
+    # - wp-document-revisions
+    # - wp-force-login
     - wp-maintenance-mode
   
   # -- Resource requests and limits for the WordPress container
