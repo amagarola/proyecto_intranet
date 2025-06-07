@@ -2,6 +2,16 @@ podSecurityContext:
   enabled: true
   fsGroup: 1001
 
+containerSecurityContext:
+  enabled: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
 intranet:
   image:
     repository: bitnami/wordpress
