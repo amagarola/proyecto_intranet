@@ -38,3 +38,8 @@ output "ssh_proxy_command" {
   description = "SSH command to connect to the proxy node"
   value       = module.proxy.ssh_proxy_command
 }
+
+output "proxy_private_ip" {
+  description = "IP privada de la instancia ec2-proxy (output del módulo proxy)"
+  value       = module.proxy.private_ip
+}

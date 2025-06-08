@@ -13,14 +13,15 @@ resource "local_file" "ec2-proxy_private_key" {
   content         = tls_private_key.ec2-proxy.private_key_pem
   file_permission = "0400" # Permiso para que SSH lo acepte
 }
+
 resource "aws_instance" "ec2-proxy" {
-  ami                         = "ami-0e449927258d45bc4" # Amazon Linux 2
+  ami                         = var.ami_id
   instance_type               = var.instance_type
   iam_instance_profile        = var.iam_instance_profile
   subnet_id                   = var.subnet_id
   vpc_security_group_ids      = [aws_security_group.this.id]
   key_name                    = aws_key_pair.ec2-proxy.key_name
-  associate_public_ip_address = true
+  associate_public_ip_address = false
 
   tags = {
     Name = var.name
@@ -80,6 +81,7 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
     }
 }
+
 server {
     listen 443 ssl;
     server_name ${var.domains[1]};
@@ -95,14 +97,11 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
     }
 }
-
 EOT
 
 ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default || true
 systemctl reload nginx
-}
 EOF
-
 }
 
 resource "aws_security_group" "this" {
@@ -123,13 +122,7 @@ resource "aws_security_group" "this" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  ingress {
-    description = "Allow HTTPS traffic"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+
   egress {
     from_port   = 0
     to_port     = 0
