@@ -25,15 +25,20 @@ jobs:
 
       - name: Iniciar o detener todas las instancias EC2
         run: |
-          INSTANCE_IDS=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].InstanceId' --output text)
-          if [ -z "$INSTANCE_IDS" ]; then
-            echo "No se encontraron instancias EC2."
-            exit 0
-          fi
           if [ "${{ github.event.inputs.ACTION }}" = "start" ]; then
+            INSTANCE_IDS=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].InstanceId' --output text)
+            if [ -z "$INSTANCE_IDS" ]; then
+              echo "No se encontraron instancias EC2."
+              exit 0
+            fi
             aws ec2 start-instances --instance-ids $INSTANCE_IDS
           elif [ "${{ github.event.inputs.ACTION }}" = "stop" ]; then
-            aws ec2 stop-instances --instance-ids $INSTANCE_IDS
+            RUNNING_INSTANCE_IDS=$(aws ec2 describe-instances --filters Name=instance-state-name,Values=running --query 'Reservations[*].Instances[*].InstanceId' --output text)
+            if [ -z "$RUNNING_INSTANCE_IDS" ]; then
+              echo "No hay instancias running para apagar."
+              exit 0
+            fi
+            aws ec2 stop-instances --instance-ids $RUNNING_INSTANCE_IDS
           else
             echo "Acción inválida: ${{ github.event.inputs.ACTION }}" >&2
             exit 1
