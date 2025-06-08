@@ -31,7 +31,31 @@ variable "security_group_id" {
   type        = string
   default     = ""
 }
+
 variable "iam_instance_profile" {
   type        = string
   description = "IAM instance profile name for EC2 (for SSM access)"
+}
+
+variable "worker_min_size" {
+  description = "Número mínimo de nodos worker en el ASG"
+  type        = number
+  default     = 1
+}
+
+variable "worker_max_size" {
+  description = "Número máximo de nodos worker en el ASG"
+  type        = number
+  default     = 3
+}
+
+variable "worker_desired_capacity" {
+  description = "Capacidad deseada de nodos worker en el ASG"
+  type        = number
+  default     = 1
+}
+
+variable "subnet_ids" {
+  description = "Lista de subnets para el Auto Scaling Group"
+  type        = list(string)
 }

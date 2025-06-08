@@ -158,50 +158,57 @@ resource "aws_instance" "master" {
 
 }
 
-# Crea las instancias worker de k3s
-resource "aws_instance" "workers" {
-  depends_on             = [aws_instance.master]
-  count                  = var.worker_count # Número de instancias worker
-  ami                    = var.ami_id
-  instance_type          = var.instance_type
-  key_name               = aws_key_pair.k3s.key_name
+# --- AUTOSCALING GROUP PARA WORKERS ---
+
+resource "aws_launch_template" "worker" {
+  name_prefix   = "k3s-worker-"
+  image_id      = var.ami_id
+  instance_type = var.instance_type
+  key_name      = aws_key_pair.k3s.key_name
+  iam_instance_profile {
+    name = var.iam_instance_profile
+  }
   vpc_security_group_ids = [var.security_group_id]
-  iam_instance_profile   = var.iam_instance_profile
-  tags                   = { Name = "node-worker-${count.index}" }
-
-  # Transfiere la clave privada al worker
-  provisioner "file" {
-    source      = "${path.module}/k3s-key.pem"
-    destination = "/home/ubuntu/.ssh/k3s-key.pem"
-
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = tls_private_key.k3s.private_key_pem
-      host        = self.public_ip
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "node-worker"
     }
   }
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt-get update -y",
-      "chmod 400 /home/ubuntu/.ssh/k3s-key.pem",
-      "MASTER_IP=${aws_instance.master.private_ip}",
-      "TOKEN=$(ssh -o StrictHostKeyChecking=no -i /home/ubuntu/.ssh/k3s-key.pem ubuntu@${aws_instance.master.public_ip} sudo cat /var/lib/rancher/k3s/server/node-token)",
-      "curl -sfL https://get.k3s.io | K3S_URL=https://$MASTER_IP:6443 K3S_TOKEN=$TOKEN sh -",
-      "sleep 10",
-      "LOCAL_HOSTNAME=$(hostname)",
-      "ssh -o StrictHostKeyChecking=no -i /home/ubuntu/.ssh/k3s-key.pem ubuntu@$MASTER_IP \"kubectl label node $LOCAL_HOSTNAME node-role.kubernetes.io/worker=true\""
-    ]
-
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = tls_private_key.k3s.private_key_pem
-      host        = self.public_ip
-      timeout     = "5m"
-    }
-  }
+  user_data = base64encode(templatefile("${path.module}/user_data_worker.sh.tftpl", {
+    master_private_ip   = aws_instance.master.private_ip,
+    master_public_ip    = aws_instance.master.public_ip,
+    k3s_private_key_pem = tls_private_key.k3s.private_key_pem,
+    worker_label        = "node-role.kubernetes.io/worker=true",
+    worker_role         = "worker" # Añadido para uso en el script
+  }))
 }
-# ────────────────────────────────────────────────────────────
+
+resource "aws_autoscaling_group" "workers" {
+  name                = "k3s-workers-asg"
+  min_size            = var.worker_min_size
+  max_size            = var.worker_max_size
+  desired_capacity    = var.worker_desired_capacity
+  vpc_zone_identifier = var.subnet_ids
+  launch_template {
+    id      = aws_launch_template.worker.id
+    version = "$Latest"
+  }
+  tag {
+    key                 = "Name"
+    value               = "node-worker"
+    propagate_at_launch = true
+  }
+  tag {
+    key                 = "kubernetes.io/role/worker"
+    value               = "1"
+    propagate_at_launch = true
+  }
+  tag {
+    key                 = "node-role.kubernetes.io/worker"
+    value               = "true"
+    propagate_at_launch = true
+  }
+  depends_on = [aws_instance.master]
+}
 

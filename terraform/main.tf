@@ -2,6 +2,7 @@ module "k3s_cluster" {
   source               = "./modules/k3s-cluster"
   security_group_id    = aws_security_group.k3s_sg.id
   iam_instance_profile = aws_iam_instance_profile.ec2_ssm_profile.name
+  subnet_ids           = ["subnet-04a08c25e59902a54"]
 }
 
 module "proxy" {

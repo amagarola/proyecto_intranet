@@ -1,0 +1,21 @@
+#!/bin/bash
+set -e
+# Script de arranque para nodos worker de k3s en ASG
+
+MASTER_IP="${master_private_ip}"
+
+# Escribir la clave privada en el worker
+cat <<'EOF' > /home/ubuntu/.ssh/k3s-key.pem
+${k3s_private_key_pem}
+EOF
+chmod 400 /home/ubuntu/.ssh/k3s-key.pem
+chown ubuntu:ubuntu /home/ubuntu/.ssh/k3s-key.pem
+
+TOKEN="$(ssh -o StrictHostKeyChecking=no -i /home/ubuntu/.ssh/k3s-key.pem ubuntu@${master_private_ip} sudo cat /var/lib/rancher/k3s/server/node-token)"
+
+sudo apt-get update -y
+curl -sfL https://get.k3s.io | K3S_URL=https://$MASTER_IP:6443 K3S_TOKEN=$TOKEN sh -
+
+# Etiquetar el nodo como worker
+LOCAL_HOSTNAME=$(hostname)
+ssh -o StrictHostKeyChecking=no -i /home/ubuntu/.ssh/k3s-key.pem ubuntu@$MASTER_IP "kubectl label node $LOCAL_HOSTNAME ${worker_label} --overwrite"

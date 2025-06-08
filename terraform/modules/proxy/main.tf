@@ -21,7 +21,7 @@ resource "aws_instance" "ec2-proxy" {
   subnet_id                   = var.subnet_id
   vpc_security_group_ids      = [aws_security_group.this.id]
   key_name                    = aws_key_pair.ec2-proxy.key_name
-  associate_public_ip_address = false
+  associate_public_ip_address = true
 
   tags = {
     Name = var.name

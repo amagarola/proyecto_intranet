@@ -71,6 +71,21 @@ resource "aws_security_group" "k3s_sg" {
     cidr_blocks = ["172.31.0.34/32"]
   }
 
+  ingress {
+    description = "SSH desde la VPC (workers al master)"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/8"]
+  }
+
+  ingress {
+    description = "Kubernetes API desde la VPC (workers al master)"
+    from_port   = 6443
+    to_port     = 6443
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/8"]
+  }
 
   #######################################################
   # EGRESS  (todo permitido para que los nodos salgan a Internet)
