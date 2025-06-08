@@ -16,8 +16,15 @@ spec:
       labels:
         app: grafana
     spec:
+      volumes:
+      - name: grafana-storage
+        persistentVolumeClaim:
+          claimName: grafana-pvc
       containers:
       - name: grafana
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         ports:
         - containerPort: {{ .Values.service.port }}
+        volumeMounts:
+        - name: grafana-storage
+          mountPath: /var/lib/grafana

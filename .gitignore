@@ -113,3 +113,4 @@ cm.yaml
 /tmp/
 tfg.drawio
 ~$*
+**/user_data_worker.sh.tftpl
