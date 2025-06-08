@@ -24,13 +24,13 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       {{- end }}
-      initContainers:
-        - name: download-favicon
-          image: curlimages/curl:latest
-          command: ["sh", "-c", "curl -L -o /bitnami/wordpress/wp-content/uploads/favicon.ico https://yt3.googleusercontent.com/1u9eXvvhfQA99HlHRSqrn1TBmMP8u56Ylexa5eMwmRx715Vc7HX-uP-UH7SkhtIzvVEWvDGhmA=s160-c-k-c0x00ffffff-no-rj"]
-          volumeMounts:
-            - name: intranet-storage
-              mountPath: /bitnami/wordpress
+      # initContainers:
+      #   - name: download-favicon
+      #     image: curlimages/curl:latest
+      #     command: ["sh", "-c", "curl -L -o /bitnami/wordpress/wp-content/uploads/favicon.ico https://yt3.googleusercontent.com/1u9eXvvhfQA99HlHRSqrn1TBmMP8u56Ylexa5eMwmRx715Vc7HX-uP-UH7SkhtIzvVEWvDGhmA=s160-c-k-c0x00ffffff-no-rj"]
+      #     volumeMounts:
+      #       - name: intranet-storage
+      #         mountPath: /bitnami/wordpress
       containers:
         - name: intranet-app
           image: "{{ .Values.intranet.image.repository }}:{{ .Values.intranet.image.tag }}"
