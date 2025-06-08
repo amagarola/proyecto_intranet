@@ -44,12 +44,10 @@ variable "zone_id" {
   type        = string
   default     = "Z00983232VK8B1OALGWO1"
 }
-
 variable "k3s_master_ip" {
   type    = string
   default = ""
 }
-
 variable "github_token" {
   description = "Token personal de GitHub para autenticación OAuth o API"
   type        = string
@@ -107,10 +105,4 @@ variable "cookie_secret" {
   description = "Cookie Secret para OAuth2 Proxy"
   type        = string
   sensitive   = true
-}
-
-variable "name" {
-  description = "Nombre base para recursos del proxy"
-  type        = string
-  default     = "ec2-proxy-sg"
 }
