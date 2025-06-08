@@ -112,4 +112,5 @@ variable "cookie_secret" {
 variable "name" {
   description = "Nombre base para recursos del proxy"
   type        = string
+  default     = "ec2-proxy-sg"
 }
