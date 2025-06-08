@@ -209,6 +209,61 @@ resource "aws_autoscaling_group" "workers" {
     value               = "true"
     propagate_at_launch = true
   }
+  tag {
+    key                 = "kubernetes.io/cluster/k3s"
+    value               = "owned"
+    propagate_at_launch = true
+  }
   depends_on = [aws_instance.master]
+}
+
+resource "aws_autoscaling_policy" "scale_out" {
+  name                   = "k3s-workers-scale-out"
+  autoscaling_group_name = aws_autoscaling_group.workers.name
+  scaling_adjustment     = 1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = 300
+  policy_type            = "SimpleScaling"
+}
+
+resource "aws_autoscaling_policy" "scale_in" {
+  name                   = "k3s-workers-scale-in"
+  autoscaling_group_name = aws_autoscaling_group.workers.name
+  scaling_adjustment     = -1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = 300
+  policy_type            = "SimpleScaling"
+}
+
+resource "aws_cloudwatch_metric_alarm" "cpu_high" {
+  alarm_name          = "k3s-workers-cpu-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 120
+  statistic           = "Average"
+  threshold           = 70
+  alarm_description   = "This metric triggers a scale out when CPU > 70%"
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.workers.name
+  }
+  alarm_actions = [aws_autoscaling_policy.scale_out.arn]
+}
+
+resource "aws_cloudwatch_metric_alarm" "cpu_low" {
+  alarm_name          = "k3s-workers-cpu-low"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 120
+  statistic           = "Average"
+  threshold           = 30
+  alarm_description   = "This metric triggers a scale in when CPU < 30%"
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.workers.name
+  }
+  alarm_actions = [aws_autoscaling_policy.scale_in.arn]
 }
 

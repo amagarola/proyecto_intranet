@@ -38,3 +38,17 @@ jobs:
             echo "Acción inválida: ${{ github.event.inputs.ACTION }}" >&2
             exit 1
           fi
+
+      - name: Iniciar o detener el Auto Scaling Group de workers
+        run: |
+          ASG_NAME="k3s-workers-asg"
+          if [ "${{ github.event.inputs.ACTION }}" = "start" ]; then
+            aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$ASG_NAME" --min-size 1 --desired-capacity 1
+            echo "ASG $ASG_NAME iniciado (min=1, desired=1)"
+          elif [ "${{ github.event.inputs.ACTION }}" = "stop" ]; then
+            aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$ASG_NAME" --min-size 0 --desired-capacity 0
+            echo "ASG $ASG_NAME detenido (min=0, desired=0)"
+          else
+            echo "Acción inválida: ${{ github.event.inputs.ACTION }}" >&2
+            exit 1
+          fi

@@ -14,7 +14,20 @@ chown ubuntu:ubuntu /home/ubuntu/.ssh/k3s-key.pem
 TOKEN="$(ssh -o StrictHostKeyChecking=no -i /home/ubuntu/.ssh/k3s-key.pem ubuntu@${master_private_ip} sudo cat /var/lib/rancher/k3s/server/node-token)"
 
 sudo apt-get update -y
-curl -sfL https://get.k3s.io | K3S_URL=https://$MASTER_IP:6443 K3S_TOKEN=$TOKEN sh -
+# Obtener providerID AWS
+INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+AVAIL_ZONE=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
+PROVIDER_ID="aws:///$AVAIL_ZONE/$INSTANCE_ID"
+
+# Eliminar cualquier instalación previa de k3s para asegurar la versión correcta
+yes | /usr/local/bin/k3s-uninstall.sh 2>/dev/null || true
+
+# Instalar k3s agent con versión fija (sin providerID)
+K3S_VERSION="v1.32.5+k3s1"
+curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=$K3S_VERSION K3S_URL=https://$MASTER_IP:6443 K3S_TOKEN=$TOKEN sh -s - agent
+
+# Verificar versión instalada
+k3s --version
 
 # Etiquetar el nodo como worker
 LOCAL_HOSTNAME=$(hostname)
