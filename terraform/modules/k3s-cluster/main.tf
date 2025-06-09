@@ -235,32 +235,32 @@ resource "aws_autoscaling_policy" "scale_in" {
   policy_type            = "SimpleScaling"
 }
 
-resource "aws_cloudwatch_metric_alarm" "cpu_high" {
-  alarm_name          = "k3s-workers-cpu-high"
+resource "aws_cloudwatch_metric_alarm" "memory_high" {
+  alarm_name          = "k3s-workers-memory-high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/EC2"
+  metric_name         = "mem_used_percent"
+  namespace           = "CWAgent"
   period              = 120
   statistic           = "Average"
   threshold           = 70
-  alarm_description   = "This metric triggers a scale out when CPU > 70%"
+  alarm_description   = "This metric triggers a scale out when memory > 70%"
   dimensions = {
     AutoScalingGroupName = aws_autoscaling_group.workers.name
   }
   alarm_actions = [aws_autoscaling_policy.scale_out.arn]
 }
 
-resource "aws_cloudwatch_metric_alarm" "cpu_low" {
-  alarm_name          = "k3s-workers-cpu-low"
+resource "aws_cloudwatch_metric_alarm" "memory_low" {
+  alarm_name          = "k3s-workers-memory-low"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = 2
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/EC2"
+  metric_name         = "mem_used_percent"
+  namespace           = "CWAgent"
   period              = 120
   statistic           = "Average"
   threshold           = 30
-  alarm_description   = "This metric triggers a scale in when CPU < 30%"
+  alarm_description   = "This metric triggers a scale in when memory < 30%"
   dimensions = {
     AutoScalingGroupName = aws_autoscaling_group.workers.name
   }
