@@ -22,7 +22,7 @@ spec:
       {{- end }}
       {{- if .Values.podSecurityContext.enabled }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- omit .Values.podSecurityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}
       containers:
         - name: intranet-app
@@ -173,17 +173,24 @@ spec:
                     ensure_unique_page "Control Horario" "[timeclock]"
 
                     # Definir cuál es la página de inicio
-                    HOMEPAGE_TITLE="Mantenimiento"
-                    echo "🏠 Buscando ID de '$HOMEPAGE_TITLE' para definirla como página de inicio..."
+                    HOMEPAGE_TITLE="Inicio"
+                    echo "🏠 Buscando ID exacta de '$HOMEPAGE_TITLE'..."
 
-                    HOMEPAGE_ID=$(wp post list --post_type=page --allow-root --fields=ID,post_title | grep "| $HOMEPAGE_TITLE" | awk -F'|' '{print $1}' | tr -d ' ')
+                    HOMEPAGE_ID=""
+                    for id in $(wp post list --post_type=page --allow-root --field=ID); do
+                      actual_title=$(wp post get "$id" --field=post_title --allow-root)
+                      if [ "$actual_title" = "$HOMEPAGE_TITLE" ]; then
+                        HOMEPAGE_ID="$id"
+                        break
+                      fi
+                    done
 
                     if [ -n "$HOMEPAGE_ID" ]; then
-                      echo "✅ Estableciendo '$HOMEPAGE_TITLE' como página de inicio (ID: $HOMEPAGE_ID)"
+                      echo "✅ Página de inicio encontrada. Estableciendo ID $HOMEPAGE_ID como home"
                       wp option update show_on_front page --allow-root
                       wp option update page_on_front "$HOMEPAGE_ID" --allow-root
                     else
-                      echo "❌ No se encontró la página '$HOMEPAGE_TITLE' para usar como inicio"
+                      echo "❌ No se pudo establecer la página de inicio: no se encontró '$HOMEPAGE_TITLE'"
                     fi
 
 
