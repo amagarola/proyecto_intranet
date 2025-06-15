@@ -31,7 +31,7 @@ intranet:
     - time-clock
     # - wp-document-revisions
     # - wp-force-login
-    - wp-maintenance-mode
+    # - wp-maintenance-mode
   pages:
     - title: "Mantenimiento"
       content: |
