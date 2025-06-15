@@ -24,13 +24,6 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       {{- end }}
-      # initContainers:
-      #   - name: download-favicon
-      #     image: curlimages/curl:latest
-      #     command: ["sh", "-c", "curl -L -o /bitnami/wordpress/wp-content/uploads/favicon.ico https://yt3.googleusercontent.com/1u9eXvvhfQA99HlHRSqrn1TBmMP8u56Ylexa5eMwmRx715Vc7HX-uP-UH7SkhtIzvVEWvDGhmA=s160-c-k-c0x00ffffff-no-rj"]
-      #     volumeMounts:
-      #       - name: intranet-storage
-      #         mountPath: /bitnami/wordpress
       containers:
         - name: intranet-app
           image: "{{ .Values.intranet.image.repository }}:{{ .Values.intranet.image.tag }}"
@@ -121,17 +114,50 @@ spec:
                   - -c
                   - |
                     sleep 60
+                    
+                    # Instalar plugins desde Helm values
                     for plugin in $(echo "{{ join " " .Values.intranet.plugins }}"); do
                       wp plugin install "$plugin" --activate --allow-root
                     done
+                    
+                    # Instalar theme
                     wp theme install twentytwentyone --activate --allow-root
-                    wp post create --post_type=page --post_title='Mantenimiento' --post_status=publish --post_content='<div style=text-align:center;padding:40px><h1>En mantenimiento</h1><p>La intranet está temporalmente fuera de servicio por tareas de mantenimiento.</p></div>' --allow-root || true
-                    wp post create --post_type=page --post_title='Inicio' --post_status=publish --allow-root || true
-                    wp post create --post_type=page --post_title='Documentos' --post_status=publish --allow-root || true
-                    wp post create --post_type=page --post_title='Noticias' --post_status=publish --allow-root || true
-                    wp post create --post_type=page --post_title='Directorio' --post_status=publish --allow-root || true
-                    wp post create --post_type=page --post_title='Control Horario' --post_status=publish --post_content='[timeclock]' --allow-root || true
+
+                    # Función helper para asegurar página única
+                    ensure_unique_page() {
+                      local title="$1"
+                      local content="$2"
+                      local ids
+                      ids=$(wp post list --post_type=page --post_title="$title" --field=ID --allow-root)
+
+                      count=$(echo "$ids" | wc -w)
+
+                      if [ "$count" -gt 1 ]; then
+                        echo "⚠️ Se encontraron múltiples páginas con título '$title'. Eliminando duplicadas..."
+                        for id in $ids; do
+                          wp post delete "$id" --force --allow-root
+                        done
+                      elif [ "$count" -eq 1 ]; then
+                        echo "✅ Página '$title' ya existe. Nada que hacer."
+                        return
+                      fi
+
+                      echo "🆕 Creando página '$title'..."
+                      wp post create --post_type=page --post_title="$title" --post_status=publish --post_content="$content" --allow-root
+                    }
+
+                    # Crear páginas únicas
+                    ensure_unique_page "Mantenimiento" '<div style="text-align:center;padding:40px"><h1>En mantenimiento</h1><p>La intranet está temporalmente fuera de servicio por tareas de mantenimiento.</p>'
+                    ensure_unique_page "Inicio" ""
+                    ensure_unique_page "Documentos" ""
+                    ensure_unique_page "Noticias" ""
+                    ensure_unique_page "Directorio" ""
+                    ensure_unique_page "Control Horario" '[timeclock]'
+
       volumes:
         - name: intranet-storage
           persistentVolumeClaim:
             claimName: "{{ include "intranet.fullname" . }}-pvc"
+        - name: valid-pages
+          configMap:
+            name: valid-pages
