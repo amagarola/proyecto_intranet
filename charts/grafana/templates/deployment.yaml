@@ -6,8 +6,6 @@ metadata:
     app: grafana
 spec:
   revisionHistoryLimit: 1
-  nodeSelector:
-    node-role.kubernetes.io/worker: "true"
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -17,6 +15,8 @@ spec:
       labels:
         app: grafana
     spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
       containers:
       - name: grafana
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
