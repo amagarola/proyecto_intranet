@@ -5,7 +5,7 @@ metadata:
   labels:
     app: grafana
 spec:
-  revisionHistoryLimit: 0
+  revisionHistoryLimit: 1
   nodeSelector:
     node-role.kubernetes.io/worker: 'true'
   replicas: {{ .Values.replicaCount }}
