@@ -116,7 +116,8 @@ spec:
                     sleep 60
                     set -x
                     exec > /bitnami/wordpress/poststart.log 2>&1
-                    apt install -y jq
+                    # apt install -y jq
+
                     # Instalar plugins desde Helm values
                     for plugin in $(echo "{{ join " " .Values.intranet.plugins }}"); do
                       wp plugin install "$plugin" --activate --allow-root
@@ -129,29 +130,28 @@ spec:
                     ensure_unique_page() {
                       local title="$1"
                       local content="$2"
-                      echo "▶️ Procesando página: $title"
+                      echo "🔍 Buscando páginas con título exacto '$title'..."
 
-                      local ids
-                      ids=$(wp post list --post_type=page --format=json --allow-root | jq -r ".[] | select(.post_title==\"$title\") | .ID")
+                      # Obtener todas las IDs de páginas con ese título
+                      ids=$(wp post list --post_type=page --allow-root --fields=ID,post_title | grep "| $title" | awk -F'|' '{print $1}' | tr -d ' ')
 
-                      local count
                       count=$(echo "$ids" | wc -w)
 
                       if [ "$count" -gt 1 ]; then
-                        echo "⚠️ Múltiples páginas encontradas para '$title'. Eliminando..."
+                        echo "⚠️ Se encontraron $count páginas con título '$title'. Eliminando todas..."
                         for id in $ids; do
                           wp post delete "$id" --force --allow-root
                         done
                         count=0
+                      elif [ "$count" -eq 1 ]; then
+                        echo "✅ Página '$title' ya existe correctamente. Nada que hacer."
+                        return
                       fi
 
-                      if [ "$count" -eq 0 ]; then
-                        echo "🆕 Creando página '$title'"
-                        wp post create --post_type=page --post_title="$title" --post_status=publish --post_content="$content" --allow-root
-                      else
-                        echo "✅ Página '$title' ya existe correctamente."
-                      fi
+                      echo "🆕 Creando página '$title'"
+                      wp post create --post_type=page --post_title="$title" --post_status=publish --post_content="$content" --allow-root
                     }
+
 
                     # Crear las páginas necesarias
                     ensure_unique_page "Mantenimiento" "<div style='text-align:center;padding:40px 0;'><h1>En mantenimiento</h1><p>La intranet está temporalmente fuera de servicio por tareas de mantenimiento.<br>Por favor, vuelve a intentarlo más tarde.</p></div>"
@@ -166,15 +166,19 @@ spec:
 
                     echo "🏠 Buscando ID de '$HOMEPAGE_TITLE' para definirla como página de inicio..."
 
-                    HOMEPAGE_ID=$(wp post list --post_type=page --format=json --allow-root | jq -r ".[] | select(.post_title==\"$HOMEPAGE_TITLE\") | .ID")
+                    HOMEPAGE_TITLE="Mantenimiento"
+                    echo "🏠 Buscando ID de '$HOMEPAGE_TITLE' para definirla como página de inicio..."
+
+                    HOMEPAGE_ID=$(wp post list --post_type=page --allow-root --fields=ID,post_title | grep "| $HOMEPAGE_TITLE" | awk -F'|' '{print $1}' | tr -d ' ')
 
                     if [ -n "$HOMEPAGE_ID" ]; then
-                      echo "✅ Estableciendo página '$HOMEPAGE_TITLE' como inicio (ID: $HOMEPAGE_ID)"
+                      echo "✅ Estableciendo '$HOMEPAGE_TITLE' como página de inicio (ID: $HOMEPAGE_ID)"
                       wp option update show_on_front page --allow-root
                       wp option update page_on_front "$HOMEPAGE_ID" --allow-root
                     else
                       echo "❌ No se encontró la página '$HOMEPAGE_TITLE' para usar como inicio"
                     fi
+
 
 
       volumes:
