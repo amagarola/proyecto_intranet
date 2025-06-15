@@ -153,14 +153,28 @@ spec:
                       fi
                     }
 
-                    # Crear todas las páginas necesarias
-                    ensure_unique_page "Mantenimiento" '<div style="text-align:center;padding:40px"><h1>En mantenimiento</h1><p>La intranet está temporalmente fuera de servicio por tareas de mantenimiento.</p>'
-                    ensure_unique_page "Inicio" ""
-                    ensure_unique_page "Documentos" ""
-                    ensure_unique_page "Noticias" ""
-                    ensure_unique_page "Directorio" ""
-                    ensure_unique_page "Control Horario" '[timeclock]'
-                    echo "✅ postStart terminado" >> /bitnami/wordpress/poststart.log
+                    # Crear las páginas necesarias
+                    ensure_unique_page "Mantenimiento" "<div style='text-align:center;padding:40px 0;'><h1>En mantenimiento</h1><p>La intranet está temporalmente fuera de servicio por tareas de mantenimiento.<br>Por favor, vuelve a intentarlo más tarde.</p></div>"
+                    ensure_unique_page "Inicio" "<p>Bienvenido a la intranet</p>"
+                    ensure_unique_page "Documentos" "<p>Documentos importantes</p>"
+                    ensure_unique_page "Noticias" "<p>Últimas noticias</p>"
+                    ensure_unique_page "Directorio" "<p>Directorio interno</p>"
+                    ensure_unique_page "Control Horario" "[timeclock]"
+
+                    # Definir cuál es la página de inicio
+                    HOMEPAGE_TITLE="Mantenimiento"
+
+                    echo "🏠 Buscando ID de '$HOMEPAGE_TITLE' para definirla como página de inicio..."
+
+                    HOMEPAGE_ID=$(wp post list --post_type=page --format=json --allow-root | jq -r ".[] | select(.post_title==\"$HOMEPAGE_TITLE\") | .ID")
+
+                    if [ -n "$HOMEPAGE_ID" ]; then
+                      echo "✅ Estableciendo página '$HOMEPAGE_TITLE' como inicio (ID: $HOMEPAGE_ID)"
+                      wp option update show_on_front page --allow-root
+                      wp option update page_on_front "$HOMEPAGE_ID" --allow-root
+                    else
+                      echo "❌ No se encontró la página '$HOMEPAGE_TITLE' para usar como inicio"
+                    fi
 
 
       volumes:
