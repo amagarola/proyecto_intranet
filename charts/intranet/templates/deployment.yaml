@@ -114,7 +114,9 @@ spec:
                   - -c
                   - |
                     sleep 60
-                    
+                    set -x
+                    exec > /bitnami/wordpress/poststart.log 2>&1
+
                     # Instalar plugins desde Helm values
                     for plugin in $(echo "{{ join " " .Values.intranet.plugins }}"); do
                       wp plugin install "$plugin" --activate --allow-root
@@ -155,6 +157,7 @@ spec:
                     ensure_unique_page "Noticias" ""
                     ensure_unique_page "Directorio" ""
                     ensure_unique_page "Control Horario" '[timeclock]'
+                    echo "✅ postStart terminado" >> /bitnami/wordpress/poststart.log
 
 
       volumes:
