@@ -29,7 +29,7 @@ spec:
           image: "{{ .Values.intranet.image.repository }}:{{ .Values.intranet.image.tag }}"
           {{- if .Values.containerSecurityContext.enabled }}
           securityContext:
-            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+            {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
           {{- end }}
           {{- if .Values.intranet.resources }}
           resources:
@@ -173,7 +173,7 @@ spec:
                     ensure_unique_page "Control Horario" "[timeclock]"
 
                     # Definir cuál es la página de inicio
-                    HOMEPAGE_TITLE="Inicio"
+                    HOMEPAGE_TITLE="Mantenimiento"
                     echo "🏠 Buscando ID exacta de '$HOMEPAGE_TITLE'..."
 
                     HOMEPAGE_ID=""
