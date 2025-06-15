@@ -132,14 +132,24 @@ spec:
                       local content="$2"
                       echo "🔍 Buscando páginas con título exacto '$title'..."
 
-                      # Obtener todas las IDs de páginas con ese título
-                      ids=$(wp post list --post_type=page --allow-root --fields=ID,post_title | grep "| $title" | awk -F'|' '{print $1}' | tr -d ' ')
+                      # Obtener todos los IDs candidatos
+                      ids=$(wp post list --post_type=page --allow-root --field=ID)
 
-                      count=$(echo "$ids" | wc -w)
+                      # Inicializar lista de duplicados
+                      matches=()
+
+                      for id in $ids; do
+                        actual_title=$(wp post get "$id" --field=post_title --allow-root)
+                        if [ "$actual_title" = "$title" ]; then
+                          matches+=("$id")
+                        fi
+                      done
+
+                      local count=${#matches[@]}
 
                       if [ "$count" -gt 1 ]; then
-                        echo "⚠️ Se encontraron $count páginas con título '$title'. Eliminando todas..."
-                        for id in $ids; do
+                        echo "⚠️ $count páginas encontradas con título '$title'. Eliminando todas..."
+                        for id in "${matches[@]}"; do
                           wp post delete "$id" --force --allow-root
                         done
                         count=0
@@ -153,6 +163,7 @@ spec:
                     }
 
 
+
                     # Crear las páginas necesarias
                     ensure_unique_page "Mantenimiento" "<div style='text-align:center;padding:40px 0;'><h1>En mantenimiento</h1><p>La intranet está temporalmente fuera de servicio por tareas de mantenimiento.<br>Por favor, vuelve a intentarlo más tarde.</p></div>"
                     ensure_unique_page "Inicio" "<p>Bienvenido a la intranet</p>"
@@ -162,10 +173,6 @@ spec:
                     ensure_unique_page "Control Horario" "[timeclock]"
 
                     # Definir cuál es la página de inicio
-                    HOMEPAGE_TITLE="Mantenimiento"
-
-                    echo "🏠 Buscando ID de '$HOMEPAGE_TITLE' para definirla como página de inicio..."
-
                     HOMEPAGE_TITLE="Mantenimiento"
                     echo "🏠 Buscando ID de '$HOMEPAGE_TITLE' para definirla como página de inicio..."
 
