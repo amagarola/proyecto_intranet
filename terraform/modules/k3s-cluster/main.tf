@@ -18,7 +18,7 @@ resource "local_file" "k3s_private_key" {
 }
 resource "aws_instance" "master" {
   ami                    = var.ami_id
-  instance_type          = "t3.medium"
+  instance_type          = "vaer.instance_type_master"
   key_name               = aws_key_pair.k3s.key_name
   vpc_security_group_ids = [var.security_group_id]
   iam_instance_profile   = var.iam_instance_profile

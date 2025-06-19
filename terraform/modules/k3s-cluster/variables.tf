@@ -13,7 +13,11 @@ variable "private_key_path" {
   type        = string
   default     = "k3s-key.pem"
 }
-
+variable "instance_type_master" {
+  description = "Tipo de instancia EC2 para los nodos"
+  type        = string
+  default     = "t3.medium"
+}
 variable "instance_type" {
   description = "Tipo de instancia EC2 para los nodos"
   type        = string

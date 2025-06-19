@@ -15,7 +15,11 @@ variable "ami_id" {
   description = "AMI ID para la instancia EC2"
   default     = "ami-084568db4383264d4"
 }
-
+variable "instance_type_master" {
+  description = "Tipo de instancia EC2 para los nodos"
+  type        = string
+  default     = "t3.medium"
+}
 variable "instance_type" {
   description = "Tipo de instancia para el proxy"
   type        = string
