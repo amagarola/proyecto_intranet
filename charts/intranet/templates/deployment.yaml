@@ -173,7 +173,7 @@ spec:
                     ensure_unique_page "Control Horario" "[timeclock]"
 
                     # Definir cuál es la página de inicio
-                    HOMEPAGE_TITLE="Control Horario"
+                    HOMEPAGE_TITLE="Mantenimiento"
                     echo "🏠 Buscando ID exacta de '$HOMEPAGE_TITLE'..."
 
                     HOMEPAGE_ID=""
